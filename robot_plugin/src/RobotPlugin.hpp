@@ -4,7 +4,7 @@
 
 #include <RobWorkStudioConfig.hpp> // For RWS_USE_QT5 definition
 
-#include "/home/student/catkin_ws/build/robot_plugin/ui_RobotPlugin.h"
+#include "ui_RobotPlugin.h"
 #include "qtros.h"
 #include <ros/ros.h>
 #include <rws/RobWorkStudioPlugin.hpp>
