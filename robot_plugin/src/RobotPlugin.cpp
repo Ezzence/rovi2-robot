@@ -9,7 +9,7 @@
 
 
 #define deviceName "UR5"
-#define workcellPath "/home/rovi2/catkin_ws/src/robot_plugin/WorkCell/Scene.wc.xml"
+#define workcellPath "/home/ada/workspace/ros_ws/src/rovi2-robot/robot_plugin/WorkCell/Scene.wc.xml"
 
 using namespace rw::common;
 using namespace rw::kinematics;
