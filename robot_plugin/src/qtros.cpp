@@ -43,6 +43,13 @@ void QtROS::moveHome()
     _robot->movePtp(home);
 }
 
+void QtROS::testSetQ(double q1, double q2, double q3, double q4, double q5, double q6)
+{
+    ROS_INFO("Called robot moving test");
+    rw::math::Q testQ = rw::math::Q(6, q1, q2, q3, q4, q5, q6);
+    _robot->movePtp(testQ);
+}
+
 
 
 void QtROS::run()

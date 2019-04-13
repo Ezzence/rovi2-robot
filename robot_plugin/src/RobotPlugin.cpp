@@ -26,31 +26,34 @@ RobotPlugin::RobotPlugin():
 	setupUi(this);
 
 
-        // initialize ros to start without running roslaunch or rosrun
-	char** argv = NULL;
-        int argc = 0;
-        ros::init(argc, argv,"robot_plugin");
+    // initialize ros to start without running roslaunch or rosrun
+    char** argv = NULL;
+    int argc = 0;
+    ros::init(argc, argv,"robot_plugin");
 
-        _timer = new QTimer(this);
-        connect(_timer, SIGNAL(timeout()), this, SLOT(timer()));
+    _timer = new QTimer(this);
+    connect(_timer, SIGNAL(timeout()), this, SLOT(timer()));
 
-	// now connect stuff from the ui component
-	connect(_btn0    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
-	connect(_btn1    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
-        connect(_btn2    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
+    // now connect stuff from the ui component
+    connect(_btn0    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
+    connect(_btn1    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
+    connect(_btn2    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
+    connect(this->btnSet, &QPushButton::pressed, [=](){
+        _qtRos->testSetQ(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+    });
 
-        _qtRos = new QtROS();
+    _qtRos = new QtROS();
 
-        // Connect signal for quit
-        connect(this, SIGNAL(quitNow()), _qtRos, SLOT(quitNow()));
+    // Connect signal for quit
+    connect(this, SIGNAL(quitNow()), _qtRos, SLOT(quitNow()));
 
-        // Connect signal for moving robot home
-        connect(this, SIGNAL(moveHome()), _qtRos, SLOT(moveHome()));
-        
-        // We need to register the type
-        qRegisterMetaType<rw::math::Q>("rw::math::Q");
-        connect(_qtRos, SIGNAL(newState(rw::math::Q)), this, SLOT(newState(rw::math::Q)));
-               
+    // Connect signal for moving robot home
+    connect(this, SIGNAL(moveHome()), _qtRos, SLOT(moveHome()));
+
+    // We need to register the type
+    qRegisterMetaType<rw::math::Q>("rw::math::Q");
+    connect(_qtRos, SIGNAL(newState(rw::math::Q)), this, SLOT(newState(rw::math::Q)));
+
 }
 
 RobotPlugin::~RobotPlugin()

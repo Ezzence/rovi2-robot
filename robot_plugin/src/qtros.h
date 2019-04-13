@@ -28,9 +28,11 @@ class QtROS : public QThread {
 
   public slots:
 
+    /* GUI element and lambda expression target slots */
     ///Connect to aboutToQuit signals, to stop the thread
     void quitNow();
     void moveHome();
+    void testSetQ(double q1, double q2, double q3, double q4, double q5, double q6);
 
 
   signals:
