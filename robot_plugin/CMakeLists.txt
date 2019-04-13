@@ -115,6 +115,7 @@ OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED
 set(SrcFiles
 	src/RobotPlugin.cpp
         src/qtros.cpp
+	src/Planner.cpp
 	${UIS_OUT_H}
 )
 
