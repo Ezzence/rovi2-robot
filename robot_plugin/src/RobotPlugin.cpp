@@ -49,7 +49,15 @@ RobotPlugin::RobotPlugin():
     connect(this->btnPlanner, &QPushButton::pressed, [=](){
         _pathPlanner = new Planner(_wc, &_state, _device);
         bool done = _pathPlanner->initRRT();
-        ROS_INFO_STREAM("planning done" << done);
+        ROS_INFO_STREAM("planner init done" << done);
+        rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+        done = _pathPlanner->plan(target);
+        ROS_INFO_STREAM("Path generation success: " << done);
+    });
+    connect(this->btnExecute, &QPushButton::pressed, [=](){
+        ROS_INFO_STREAM("Executing plan");
+        bool done = _qtRos->movePathServo(_pathPlanner->_path, _device, &_state);
+        ROS_INFO_STREAM("Plan execution: " << done);
     });
 
     _qtRos = new QtROS();

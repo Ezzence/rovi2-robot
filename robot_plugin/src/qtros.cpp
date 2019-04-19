@@ -55,7 +55,28 @@ void QtROS::testServo(double q1, double q2, double q3, double q4, double q5, dou
     ROS_INFO("Called robot moving test Servo");
     rw::math::Q testQ = rw::math::Q(6, q1, q2, q3, q4, q5, q6);
     _robot->moveServoQ(testQ, time, lookahead, 300.f);
+    this->wait(time*1000);              // QThread::wait is in miliseconds
+    _robot->moveServoStop();
 }
+
+bool QtROS::movePathServo(rw::trajectory::QPath &path, rw::models::Device::Ptr device, rw::kinematics::State::Ptr state)
+{
+    _robot->moveServoQ(path.at(0), 2.f, 0.1f, 300.f);
+    this->wait(2000);
+    rw::math::Q currentPos = device->getQ(*state);
+    for(size_t i = 1; i < path.size(); ++i)
+    {
+        _robot->moveServoQ(path.at(i), 0.5f, 0.1f, 300.f);
+        while((currentPos - path.at(i)).norm2() > 0.05)
+        {
+            ROS_INFO_STREAM("distance: " << (currentPos - path.at(i)).norm2());
+            rw::math::Q currentPos = device->getQ(*state);
+        }
+    }
+    return true;
+}
+
+
 
 
 
@@ -63,14 +84,15 @@ void QtROS::run()
 {
   while(ros::ok() && !quitfromgui)
   {
-    ros::spinOnce(); 
-    
+    ros::spinOnce();
+    QCoreApplication::processEvents();
+
     // Adjust the sleep to, according to how often you will check ROS for new messages
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.01).sleep();
   }
   if (!quitfromgui)
   {
     emit rosQuits();
-    ROS_INFO("ROS-Node Terminated\n"); 
+    ROS_INFO("ROS-Node Terminated\n");
   }
 }

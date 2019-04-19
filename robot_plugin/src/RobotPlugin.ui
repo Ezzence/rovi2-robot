@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>468</width>
+    <width>490</width>
     <height>250</height>
    </rect>
   </property>
@@ -24,6 +24,9 @@
         </property>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ1">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -37,6 +40,9 @@
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ2">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -47,12 +53,15 @@
            <double>0.100000000000000</double>
           </property>
           <property name="value">
-           <double>-1.500000000000000</double>
+           <double>-1.570000000000000</double>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ3">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -66,6 +75,9 @@
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ4">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -76,12 +88,15 @@
            <double>0.100000000000000</double>
           </property>
           <property name="value">
-           <double>-1.500000000000000</double>
+           <double>-1.570000000000000</double>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ5">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -95,6 +110,9 @@
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="boxQ6">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
            <double>-4.000000000000000</double>
           </property>
@@ -190,7 +208,14 @@
         <item>
          <widget class="QPushButton" name="btnPlanner">
           <property name="text">
-           <string>Planner</string>
+           <string>Plan</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnExecute">
+          <property name="text">
+           <string>Execute</string>
           </property>
          </widget>
         </item>

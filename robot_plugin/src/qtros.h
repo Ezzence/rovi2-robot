@@ -9,7 +9,11 @@
 #include <ros/ros.h>
 #include <QThread>
 #include <QObject>
+#include <QCoreApplication>
 #include <rw/math/Q.hpp>
+#include <rw/trajectory.hpp>
+#include <rw/models.hpp>
+#include <rw/kinematics.hpp>
 #include <caros_control_msgs/RobotState.h>
 #include <caros/serial_device_si_proxy.h>
 
@@ -34,6 +38,7 @@ class QtROS : public QThread {
     void moveHome();
     void testPTP(double q1, double q2, double q3, double q4, double q5, double q6);
     void testServo(double q1, double q2, double q3, double q4, double q5, double q6, float time = 0.1f, float lookahead = 0.04f);
+    bool movePathServo(rw::trajectory::QPath &path, rw::models::Device::Ptr device, rw::kinematics::State::Ptr state);
 
 
   signals:

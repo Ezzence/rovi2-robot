@@ -55,6 +55,7 @@ private:
     rw::models::Device::Ptr _device;
 
 
+
 };
 
 #endif /*RINGONHOOKPLUGIN_HPP_*/

@@ -13,6 +13,9 @@
 #include <rwlibs/proximitystrategies/ProximityStrategyYaobi.hpp>
 #include <rwlibs/proximitystrategies/ProximityStrategyFactory.hpp>
 
+using namespace rw;
+using namespace rw::math;
+
 
 using namespace rw;
 
@@ -23,6 +26,12 @@ public:
     virtual ~Planner();
 
     bool initRRT();
+    bool plan(Q target);
+    bool plan(Q target, rw::trajectory::QPath &path);
+
+    void debugPath(rw::trajectory::QPath &path);
+
+    rw::trajectory::QPath _path;
 
 
 private slots:
@@ -49,8 +58,7 @@ private:
     proximity::CollisionDetector::Ptr _detector;
 
     pathplanning::QSampler::Ptr _cfreeQ;
-
-    pathplanning::QToQPlanner::Ptr planner;
+    pathplanning::QToQPlanner::Ptr _planner;
     // A sampler of collision free configurations for the device.
     //rw::pathplanning::QSampler::Ptr cfreeQ = QSampler::makeConstrained(QSampler::makeUniform(device), constraint);
 
