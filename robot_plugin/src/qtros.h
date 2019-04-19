@@ -32,7 +32,8 @@ class QtROS : public QThread {
     ///Connect to aboutToQuit signals, to stop the thread
     void quitNow();
     void moveHome();
-    void testSetQ(double q1, double q2, double q3, double q4, double q5, double q6);
+    void testPTP(double q1, double q2, double q3, double q4, double q5, double q6);
+    void testServo(double q1, double q2, double q3, double q4, double q5, double q6, float time = 0.1f, float lookahead = 0.04f);
 
 
   signals:

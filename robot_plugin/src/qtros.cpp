@@ -43,11 +43,18 @@ void QtROS::moveHome()
     _robot->movePtp(home);
 }
 
-void QtROS::testSetQ(double q1, double q2, double q3, double q4, double q5, double q6)
+void QtROS::testPTP(double q1, double q2, double q3, double q4, double q5, double q6)
 {
-    ROS_INFO("Called robot moving test");
+    ROS_INFO("Called robot moving test PTP");
     rw::math::Q testQ = rw::math::Q(6, q1, q2, q3, q4, q5, q6);
     _robot->movePtp(testQ);
+}
+
+void QtROS::testServo(double q1, double q2, double q3, double q4, double q5, double q6, float time, float lookahead)
+{
+    ROS_INFO("Called robot moving test Servo");
+    rw::math::Q testQ = rw::math::Q(6, q1, q2, q3, q4, q5, q6);
+    _robot->moveServoQ(testQ, time, lookahead, 300.f);
 }
 
 

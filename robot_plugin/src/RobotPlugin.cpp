@@ -38,8 +38,15 @@ RobotPlugin::RobotPlugin():
     connect(_btn0    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
     connect(_btn1    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
     connect(_btn2    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
-    connect(this->btnSet, &QPushButton::pressed, [=](){
-        //_qtRos->testSetQ(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+    connect(this->btnPTP, &QPushButton::pressed, [=](){
+        _qtRos->testPTP(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+
+    });
+    connect(this->btnServo, &QPushButton::pressed, [=](){
+        _qtRos->testServo(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value(), boxTime->value(), boxLookahead->value());
+
+    });
+    connect(this->btnPlanner, &QPushButton::pressed, [=](){
         _pathPlanner = new Planner(_wc, &_state, _device);
         bool done = _pathPlanner->initRRT();
         ROS_INFO_STREAM("planning done" << done);
@@ -105,7 +112,7 @@ void RobotPlugin::btnPressed()
     if(obj==_btn0)
     {
         log().info() << "Start\n";
-        //_qtRos->start();
+        _qtRos->start();
 
     }
     else if(obj==_btn1)
