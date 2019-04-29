@@ -101,7 +101,7 @@ SET(UIS_FILES src/RobotPlugin.ui )
 
 QT5_WRAP_UI(UIS_OUT_H ${UIS_FILES})
 
-QT5_WRAP_CPP(MocSrcFiles src/RobotPlugin.hpp src/qtros.h
+QT5_WRAP_CPP(MocSrcFiles src/RobotPlugin.hpp src/qtros.h src/Planner.h
 OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED
 )
 # Rcc the files:

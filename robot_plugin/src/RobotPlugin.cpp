@@ -33,11 +33,23 @@ RobotPlugin::RobotPlugin():
 
     _timer = new QTimer(this);
     connect(_timer, SIGNAL(timeout()), this, SLOT(timer()));
+    _timer->start(500);
 
-    // now connect stuff from the ui component
+    // connect GUI elements
     connect(_btn0    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
     connect(_btn1    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
     connect(_btn2    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
+
+    connect(this->btnPlanner, &QPushButton::pressed, [=](){
+        rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+        emit signalPlan(target);
+    });
+
+    _qtRos = new QtROS();
+
+    // connect QtROS
+    connect(this, &RobotPlugin::signalMoveServo, _qtRos, &QtROS::moveServo, Qt::ConnectionType::QueuedConnection);
+    connect(this, &RobotPlugin::signalStopServo, _qtRos, &QtROS::stopServo, Qt::ConnectionType::QueuedConnection);
     connect(this->btnPTP, &QPushButton::pressed, [=](){
         _qtRos->testPTP(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
 
@@ -46,21 +58,12 @@ RobotPlugin::RobotPlugin():
         _qtRos->testServo(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value(), boxTime->value(), boxLookahead->value());
 
     });
-    connect(this->btnPlanner, &QPushButton::pressed, [=](){
-        _pathPlanner = new Planner(_wc, &_state, _device);
-        bool done = _pathPlanner->initRRT();
-        ROS_INFO_STREAM("planner init done" << done);
-        rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
-        done = _pathPlanner->plan(target);
-        ROS_INFO_STREAM("Path generation success: " << done);
-    });
+
     connect(this->btnExecute, &QPushButton::pressed, [=](){
         ROS_INFO_STREAM("Executing plan");
-        bool done = _qtRos->movePathServo(_pathPlanner->_path, _device, &_state);
-        ROS_INFO_STREAM("Plan execution: " << done);
+        _movingServo = true;
+        //bool done = _qtRos->movePathServo(_pathPlanner->_path, _device, &_state);
     });
-
-    _qtRos = new QtROS();
 
     // Connect signal for quit
     connect(this, SIGNAL(quitNow()), _qtRos, SLOT(quitNow()));
@@ -95,6 +98,7 @@ void RobotPlugin::initialize()
     // Auto load workcell
     rw::models::WorkCell::Ptr wc = rw::loaders::WorkCellLoader::Factory::load(workcellPath);
     getRobWorkStudio()->setWorkCell(wc);
+
 }
 
 void RobotPlugin::open(WorkCell* workcell)
@@ -119,6 +123,14 @@ void RobotPlugin::btnPressed()
     QObject *obj = sender();
     if(obj==_btn0)
     {
+        //initialize path planner
+        _pathPlanner = new Planner(_wc, &_state, _device, this);
+        // connect Planner
+        connect(this, &RobotPlugin::signalPlan, _pathPlanner, &Planner::callPlan, Qt::ConnectionType::QueuedConnection);
+        bool done = _pathPlanner->initRRT();
+        ROS_INFO_STREAM("planner init done" << done);
+        //_pathPlanner->start();
+
         log().info() << "Start\n";
         _qtRos->start();
 
@@ -137,7 +149,26 @@ void RobotPlugin::btnPressed()
 
 void RobotPlugin::timer()
 {
-    _timer->stop();
+    if(_movingServo)
+    {
+        rw::math::Q currentPos = _device->getQ(_state);
+        double dist = (currentPos - _pathPlanner->_path.at(_pathIterator)).norm2();
+        if(dist < 0.1)
+        {
+            _pathIterator++;
+            emit signalStopServo();
+            emit signalMoveServo(_pathPlanner->_path.at(_pathIterator));
+        }
+        else
+        {
+            emit signalStopServo();
+            emit signalMoveServo(_pathPlanner->_path.at(_pathIterator));
+        }
+        ROS_INFO_STREAM("distance: " << dist);
+        // stop and reset iterator at end
+    }
+
+    //_timer->stop();
 }
 
 void RobotPlugin::stateChangedListener(const State& state)

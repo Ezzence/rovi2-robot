@@ -44,15 +44,22 @@ signals:
     void quitNow();
     void moveHome();
 
+    void signalPlan(Q target);
+    void signalMoveServo(Q target);
+    void signalStopServo();
+
 private:
 
     QTimer* _timer;
     QtROS *_qtRos;
-    Planner* _pathPlanner;
+    Planner* _pathPlanner = nullptr;
 
     rw::models::WorkCell::Ptr _wc;
     rw::kinematics::State _state;
     rw::models::Device::Ptr _device;
+
+    bool _movingServo = false;
+    size_t _pathIterator = 0;
 
 
 

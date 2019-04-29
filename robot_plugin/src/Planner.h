@@ -1,11 +1,14 @@
+﻿
+#ifndef PLANNER_H
+#define PLANNER_H
 
-#pragma once
-
-#include "qtros.h"
+#include <QThread>
+#include <QCoreApplication>
 
 #include <ros/ros.h>
 #include <rw/models.hpp>
 #include <rw/math/Q.hpp>
+#include <rw/math/MetricFactory.hpp>
 #include <rw/pathplanning.hpp>
 #include <rw/proximity.hpp>
 #include <rw/loaders/path/PathLoader.hpp>
@@ -16,26 +19,29 @@
 using namespace rw;
 using namespace rw::math;
 
-
-using namespace rw;
-
-class Planner
+class Planner : public QThread
 {
+    Q_OBJECT
 public:
-    Planner(rw::models::WorkCell::Ptr wc, rw::kinematics::State::Ptr state, rw::models::Device::Ptr device);
-    virtual ~Planner();
+    Planner(){
+        int boo;
+    }
+    // weird bug with robwork signature _ZTV7Planner was because this class was not added into the cmake with the QT_WRAPPER_CPP
+    Planner(rw::models::WorkCell::Ptr wc, rw::kinematics::State::Ptr state, rw::models::Device::Ptr device, QObject* parent = nullptr);
+    ~Planner(){}
+
+    void run();
 
     bool initRRT();
-    bool plan(Q target);
     bool plan(Q target, rw::trajectory::QPath &path);
 
     void debugPath(rw::trajectory::QPath &path);
 
     rw::trajectory::QPath _path;
 
+public slots:
 
-private slots:
-
+    void callPlan(Q target);
 
 signals:
 
@@ -64,4 +70,6 @@ private:
 
 
 };
+
+#endif
 

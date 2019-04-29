@@ -59,12 +59,21 @@ void QtROS::testServo(double q1, double q2, double q3, double q4, double q5, dou
     _robot->moveServoStop();
 }
 
+void QtROS::moveServo(rw::math::Q target)
+{
+    _robot->moveServoQ(target, 0.5f, 0.1f, 300.f);
+}
+
+void QtROS::stopServo()
+{
+    _robot->moveServoStop();
+}
+
 bool QtROS::movePathServo(rw::trajectory::QPath &path, rw::models::Device::Ptr device, rw::kinematics::State::Ptr state)
 {
     _robot->moveServoQ(path.at(0), 2.f, 0.1f, 300.f);
-    this->wait(2000);
     rw::math::Q currentPos = device->getQ(*state);
-    for(size_t i = 1; i < path.size(); ++i)
+    for(size_t i = 0; i < path.size(); ++i)
     {
         _robot->moveServoQ(path.at(i), 0.5f, 0.1f, 300.f);
         while((currentPos - path.at(i)).norm2() > 0.05)
