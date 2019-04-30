@@ -40,27 +40,29 @@ RobotPlugin::RobotPlugin():
     connect(_btn1    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
     connect(_btn2    ,SIGNAL(pressed()), this, SLOT(btnPressed()) );
 
-    connect(this->btnPlanner, &QPushButton::pressed, [=](){
+    connect(this->btnPlanner, &QPushButton::released, [=](){
         rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
-        emit signalPlan(target);
+        emit signalPlan(target, this->boxPlanSelect->currentIndex());
     });
 
     _qtRos = new QtROS();
 
     // connect QtROS
     connect(this, &RobotPlugin::signalMoveServo, _qtRos, &QtROS::moveServo, Qt::ConnectionType::QueuedConnection);
+    connect(this, &RobotPlugin::signalUpdateServo, _qtRos, &QtROS::updateServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalStopServo, _qtRos, &QtROS::stopServo, Qt::ConnectionType::QueuedConnection);
     connect(this->btnPTP, &QPushButton::pressed, [=](){
         _qtRos->testPTP(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
 
     });
-    connect(this->btnServo, &QPushButton::pressed, [=](){
+    connect(this->btnServo, &QPushButton::released, [=](){
         _qtRos->testServo(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value(), boxTime->value(), boxLookahead->value());
 
     });
 
-    connect(this->btnExecute, &QPushButton::pressed, [=](){
+    connect(this->btnExecute, &QPushButton::released, [=](){
         ROS_INFO_STREAM("Executing plan");
+        _movingStart = true;
         _movingServo = true;
         //bool done = _qtRos->movePathServo(_pathPlanner->_path, _device, &_state);
     });
@@ -153,19 +155,37 @@ void RobotPlugin::timer()
     {
         rw::math::Q currentPos = _device->getQ(_state);
         double dist = (currentPos - _pathPlanner->_path.at(_pathIterator)).norm2();
-        if(dist < 0.1)
+
+        // start servo movement first
+        if(_movingStart)
+        {
+            ROS_INFO_STREAM("MOVING SERVO!");
+            emit signalMoveServo(_pathPlanner->_path.at(_pathIterator));
+            _movingStart = false;
+        }
+        // stop and reset iterator at end
+        else if(_pathIterator >= (_pathPlanner->_path.size() - 1))
+        {
+            if(dist < 0.001)
+            {
+                ROS_INFO_STREAM("STOPPING SERVO!");
+                emit signalStopServo();
+                _pathIterator = 0;
+                _movingServo = false;
+            }
+        }
+        // move to next Q
+        else if(dist < 0.1)
         {
             _pathIterator++;
-            emit signalStopServo();
-            emit signalMoveServo(_pathPlanner->_path.at(_pathIterator));
+            emit signalUpdateServo(_pathPlanner->_path.at(_pathIterator));
         }
+        // keep moving towards current Q
         else
         {
-            emit signalStopServo();
-            emit signalMoveServo(_pathPlanner->_path.at(_pathIterator));
+            emit signalUpdateServo(_pathPlanner->_path.at(_pathIterator));
         }
         ROS_INFO_STREAM("distance: " << dist);
-        // stop and reset iterator at end
     }
 
     //_timer->stop();

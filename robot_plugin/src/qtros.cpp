@@ -61,7 +61,12 @@ void QtROS::testServo(double q1, double q2, double q3, double q4, double q5, dou
 
 void QtROS::moveServo(rw::math::Q target)
 {
-    _robot->moveServoQ(target, 0.5f, 0.1f, 300.f);
+    _robot->moveServoQ(target, 1.f, 0.1f, 300.f);
+}
+
+void QtROS::updateServo(rw::math::Q target)
+{
+    _robot->moveServoUpdate(target);
 }
 
 void QtROS::stopServo()

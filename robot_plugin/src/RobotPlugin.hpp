@@ -32,7 +32,6 @@ public:
 
     virtual void initialize();
 
-
 private slots:
     void btnPressed();
     void timer();
@@ -44,8 +43,9 @@ signals:
     void quitNow();
     void moveHome();
 
-    void signalPlan(Q target);
+    void signalPlan(Q target, int planSelect);
     void signalMoveServo(Q target);
+    void signalUpdateServo(Q target);
     void signalStopServo();
 
 private:
@@ -59,6 +59,7 @@ private:
     rw::models::Device::Ptr _device;
 
     bool _movingServo = false;
+    bool _movingStart = false;
     size_t _pathIterator = 0;
 
 
