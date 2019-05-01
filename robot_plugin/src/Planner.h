@@ -4,6 +4,7 @@
 
 #include <QThread>
 #include <QCoreApplication>
+#include <QElapsedTimer>
 
 #include <ros/ros.h>
 #include <rw/models.hpp>
@@ -57,7 +58,7 @@ private:
     // default robwork RRT
     bool doQueryRWRRT(Q target, rw::trajectory::QPath &path);
 
-    // ARRT
+    // RRT
     bool doQueryRRT(const Q start, const Q goal, trajectory::QPath& result);
     bool inCollision(const Q &q);
     bool inCollision(RRTNode<Q>* a, const Q &b);
@@ -69,8 +70,32 @@ private:
 
     double _resolution = 0.01;
     double _epsilon = 0.1;
-    float _pGoal = 0.2;
+    float _pGoal = 0.2f;
     size_t _planIterator = 0;
+
+    // ARRT
+    bool doQueryARRT(const Q start, const Q goal, trajectory::QPath& result);
+    double growTreeARRT(RRTTree<Q>& tree, const Q& goal);
+    const Q chooseTargetARRT(const Q& start, const Q& goal);
+    const Q extendARRT(RRTTree<Q>& tree, const Q& goal, const Q& qTarget, RRTNode<Q>* & parent);
+    std::vector<RRTNode<Q>*> kNearestNeighbours(const Q& qTarget, size_t k, RRTTree<Q>& tree);
+    //const Q generateExtenstion(RRTTree<Q>& tree, const Q& q);
+    double getPathCost(trajectory::QPath& path);
+
+    QElapsedTimer _elapsedTimer;
+    RRTTree<Q>* _bestTree;
+    double _cost = DBL_MAX;
+    double _costEpsilon = 0.1;
+    double _distanceHeuristic = 0.5;
+    double _distanceDelta = 0;
+    double _costHeuristic = 0.5;
+    double _costDelta = 0;
+    size_t _maxAttempts = 10000;
+    size_t _k = 4;
+    const Q* _tempQ1;
+    const Q* _tempQ2;
+
+
 
     std::random_device _rd;
     std::mt19937 _gen;
