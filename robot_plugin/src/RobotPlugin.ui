@@ -231,6 +231,11 @@
             <string>RRT</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>ARRT</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

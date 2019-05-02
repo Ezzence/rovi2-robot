@@ -43,7 +43,7 @@ public:
     rw::trajectory::QPath _path;
 
     enum ExtendResult { Trapped, Reached, Advanced };
-    enum PlanSelect { RW_RRT = 0, RRT = 1};
+    enum PlanSelect { RW_RRT = 0, RRT = 1, ARRT = 2};
 
 
 public slots:
