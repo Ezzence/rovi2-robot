@@ -39,6 +39,7 @@ public:
     bool initRRT();
 
     void debugPath(rw::trajectory::QPath &path);
+    void debugTree(RRTTree<Q>& tree);
 
     rw::trajectory::QPath _path;
 
@@ -70,7 +71,7 @@ private:
 
     double _resolution = 0.01;
     double _epsilon = 0.1;
-    float _pGoal = 0.2f;
+    float _pGoal = 0.1f;
     size_t _planIterator = 0;
 
     // ARRT
@@ -83,14 +84,14 @@ private:
     double getPathCost(trajectory::QPath& path);
 
     QElapsedTimer _elapsedTimer;
-    RRTTree<Q>* _bestTree;
+    RRTTree<Q>* _bestTree = nullptr;
     double _cost = DBL_MAX;
-    double _costEpsilon = 0.1;
+    double _costEpsilon = 0.01;
     double _distanceHeuristic = 0.5;
     double _distanceDelta = 0;
     double _costHeuristic = 0.5;
     double _costDelta = 0;
-    size_t _maxAttempts = 10000;
+    size_t _maxAttempts = 50000;
     size_t _k = 4;
     const Q* _tempQ1;
     const Q* _tempQ2;

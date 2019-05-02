@@ -82,6 +82,13 @@ void Planner::debugPath(trajectory::QPath &path)
     ROS_INFO_STREAM("path size: " << path.size());
 }
 
+void Planner::debugTree(RRTTree<Q> &tree)
+{
+    BOOST_FOREACH(Node* node, tree.getNodes()) {
+        ROS_INFO_STREAM(node->getValue()[0] << " " << node->getValue()[1] << " " << node->getValue()[2] << " " << node->getValue()[3] << " " << node->getValue()[4] << " " << node->getValue()[5]);
+    }
+}
+
 void Planner::callPlan(Q target, int planSelect)
 {
     _path.clear();
@@ -293,10 +300,12 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
 
         if(costed != 0)
         {
+            ROS_INFO_STREAM("ARRT: DEBUG3");
             if(_bestTree != nullptr){
                 delete _bestTree;
             }
             _bestTree = startTree;
+            result = Path();        // TODO: _path is empty here
             _bestTree->getRootPath(_bestTree->getLast(), result);
             ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
             debugPath(result);
@@ -332,8 +341,9 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
             Node* parent;
             qNew = extendARRT(tree, goal, qTarget, parent);
             if(qNew != Q()){
-                tree.add(qTarget, parent);
+                tree.add(qNew, parent);
                 ROS_INFO_STREAM("ARRT: DEBUG");
+                //debugTree(tree);
             }
         }
         // update time
@@ -360,65 +370,58 @@ const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
         while(_metric->distance(start, qNew) + _metric->distance(qNew, goal) > _cost)
         {
             qNew = _sampler->sample();
+            //ROS_INFO_STREAM("SAMPLE: " << qNew[0] << " " << qNew[1] << " " << qNew[2] << " " << qNew[3] << " " << qNew[4] << " " << qNew[5]);
             ++attempts;
             if(attempts > _maxAttempts){
                 ROS_WARN_STREAM("WARNING: no sample found within threshold");
-                return Q();
+                qNew = goal;         // in paper: return Q();
+                attempts = 0;
             }
         }
+        ROS_INFO_STREAM("ARRT: SAMPLED");
         return qNew;
     }
 }
 
 const Q Planner::extendARRT(RRTTree<Q> &tree, const Q& goal, const Q &qTarget, Node* & parent)
 {
-    ROS_INFO_STREAM("ARRT: extend");
     std::vector<Node*> QNear = kNearestNeighbours(qTarget, _k, tree);
 
-    ROS_INFO_STREAM("ARRT: sort " << QNear.size());
     // sort QNear descending
     _tempQ1 = &qTarget; _tempQ2 = &tree.getRoot().getValue();
     std::sort(QNear.begin(), QNear.end(), [this](const Node* a, const Node* b){
-        ROS_INFO_STREAM("ARRT: check");
        return _distanceHeuristic*_metric->distance(a->getValue(), *_tempQ1) + _costHeuristic*_metric->distance(*_tempQ2, a->getValue())
                > _distanceHeuristic*_metric->distance(b->getValue(), *_tempQ1) + _costHeuristic*_metric->distance(*_tempQ2, b->getValue());
     });
 
     while(!QNear.empty())
     {
-        ROS_INFO_STREAM("ARRT: extend2");
         Node* qTree = QNear.back();
 
         const Q delta = qTarget - qTree->getValue();
         const double dist = _metric->distance(delta);
 
         const Q qNew = dist <= _epsilon ? qTarget : (qTree->getValue() + (_epsilon/dist)*delta);
-        ROS_INFO_STREAM("ARRT: VAL: " << qNew[0] << " " << qNew[1] << " " << qNew[2] << " " << qNew[3] << " " << qNew[4] << " " << qNew[5]);
-        ROS_INFO_STREAM("ARRT: VAL: " << qTree->getValue()[0] << " " << qTree->getValue()[1] << " " << qTree->getValue()[2] << " " << qTree->getValue()[3] << " " << qTree->getValue()[4] << " " << qTree->getValue()[5]);
+        //ROS_INFO_STREAM("ARRT: VAL: " << qNew[0] << " " << qNew[1] << " " << qNew[2] << " " << qNew[3] << " " << qNew[4] << " " << qNew[5]);
         if (!inCollision(qTree, qNew))
         {
             Path path;
             tree.getRootPath(*qTree, path);
             double cost = getPathCost(path) + _metric->distance(qTree->getValue(), qNew) + _metric->distance(qNew, goal);
             if(cost < _cost){
-                ROS_INFO_STREAM("ARRT: extend3");
-                parent = qTree;     // TODO: debug pointer passing here
+                parent = qTree;
+                ROS_INFO_STREAM("ARRT: EXTEND");
                 return qNew;
             }
         }
         QNear.pop_back();
     }
-    ROS_INFO_STREAM("ARRT: extend4");
     return Q();
 }
 
 std::vector<RRTNode<Q> *> Planner::kNearestNeighbours(const Q &qTarget, size_t k, RRTTree<Q> &tree)
 {
-    ROS_INFO_STREAM("ARRT: nearest");
-
     std::vector<Node*> minNodes;
-    Node* dummy;
-    //minNodes.push_back(dummy); // a useless dummy has to be at the end of vector so that std:find can work
     for(size_t i = 0; i < k; ++i)
     {
         double minLength = DBL_MAX;
@@ -437,7 +440,6 @@ std::vector<RRTNode<Q> *> Planner::kNearestNeighbours(const Q &qTarget, size_t k
         }
     }
 
-    //minNodes.pop_back();
     return minNodes;
 }
 
