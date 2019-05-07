@@ -45,6 +45,23 @@ RobotPlugin::RobotPlugin():
         _pathPlanner->MAX_TIME = boxMaxTime->value();
         emit signalPlan(target, this->boxPlanSelect->currentIndex());
     });
+    connect(this->btnInv, &QPushButton::released, [=](){
+        ROS_INFO_STREAM("Requesting inverse kinematics");
+        Vector3D<double> v = Vector3D<double>(boxX->value(), boxY->value(), boxZ->value());
+        Rotation3D<double> rot = RPY<double>(boxRZ->value(), boxRY->value(), boxRX->value()).toRotation3D();
+        Transform3D<double> t = Transform3D<double>(v, rot);
+        std::vector<Q> s;
+        inverseKinematics(_device, _state, t, s);
+        if(!s.empty())
+        {
+            boxQ1->setValue(s.front()[0]);
+            boxQ2->setValue(s.front()[1]);
+            boxQ3->setValue(s.front()[2]);
+            boxQ4->setValue(s.front()[3]);
+            boxQ5->setValue(s.front()[4]);
+            boxQ6->setValue(s.front()[5]);
+        }
+    });
 
     _qtRos = new QtROS();
 
@@ -192,6 +209,21 @@ void RobotPlugin::timer()
     }
 
     //_timer->stop();
+}
+
+void RobotPlugin::inverseKinematics(rw::common::Ptr<Device> device, const State &state, const Transform3D<> &target, std::vector<Q> &solutions)
+{
+    invkin::JacobianIKSolver solver(device, state);
+    solutions = solver.solve(target, state);
+    if(solutions.empty()){
+        ROS_INFO_STREAM("No IK solution found.");
+    }
+    else
+    {
+        for(Q q : solutions) {
+            std::cout<<"Solution = "<<q<<std::endl;
+        }
+    }
 }
 
 void RobotPlugin::stateChangedListener(const State& state)

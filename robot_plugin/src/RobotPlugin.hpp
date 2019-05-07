@@ -12,6 +12,7 @@
 #include <rw/models.hpp>
 #include <rw/math/Q.hpp>
 #include <rw/models/Device.hpp>
+#include <rw/invkin.hpp>
 
 
 // Initialize plugin using QT5
@@ -35,6 +36,7 @@ public:
 private slots:
     void btnPressed();
     void timer();
+    void inverseKinematics(rw::common::Ptr<models::Device> device, const kinematics::State& state, const Transform3D<>& target, std::vector<Q>& solutions);
 
     void stateChangedListener(const rw::kinematics::State& state);
     void newState(rw::math::Q pos);
