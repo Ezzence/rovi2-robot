@@ -50,12 +50,11 @@ void QtROS::testPTP(double q1, double q2, double q3, double q4, double q5, doubl
     _robot->movePtp(testQ);
 }
 
-void QtROS::testServo(double q1, double q2, double q3, double q4, double q5, double q6, float time, float lookahead)
+void QtROS::testServo(rw::math::Q target, float time, float lookahead)
 {
     ROS_INFO("Called robot moving test Servo");
-    rw::math::Q testQ = rw::math::Q(6, q1, q2, q3, q4, q5, q6);
-    _robot->moveServoQ(testQ, time, lookahead, 300.f);
-    this->wait(time*1000);              // QThread::wait is in miliseconds
+    _robot->moveServoQ(target, time, lookahead, 300.f);
+    this->wait((static_cast<unsigned long>(time)*1000));              // QThread::wait is in miliseconds
     _robot->moveServoStop();
 }
 

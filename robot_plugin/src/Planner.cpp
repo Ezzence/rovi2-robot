@@ -92,6 +92,7 @@ void Planner::debugTree(RRTTree<Q> &tree)
 void Planner::callPlan(Q target, int planSelect)
 {
     _path.clear();
+    _planIterator = 0;
     bool success = false;
     switch (planSelect)
     {
@@ -307,12 +308,21 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
             _bestTree = startTree;
             result = Path();        // TODO: _path is empty here
             _bestTree->getRootPath(_bestTree->getLast(), result);
-            ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+            ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " ----------------------------------------------------------------------------------");
             debugPath(result);
 
             _cost = (1 - _costEpsilon)*costed;
             _distanceHeuristic = std::max(double(0), _distanceHeuristic - _distanceDelta);
             _costHeuristic = std::min(1.0, _costHeuristic + _costDelta);
+        }
+        else
+        {
+            if(_planIterator > 0){
+                return true;
+            }
+            else{
+                return false;
+            }
         }
 
         ++_planIterator;
@@ -346,7 +356,9 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
                 //debugTree(tree);
             }
         }
-        // update time
+        if(_elapsedTimer.elapsed() > MAX_TIME){
+            return 0;
+        }
     }
     Path path;
     ROS_INFO_STREAM("ARRT: DEBUG2");
@@ -376,6 +388,7 @@ const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
                 ROS_WARN_STREAM("WARNING: no sample found within threshold");
                 qNew = goal;         // in paper: return Q();
                 attempts = 0;
+                return Q();
             }
         }
         ROS_INFO_STREAM("ARRT: SAMPLED");

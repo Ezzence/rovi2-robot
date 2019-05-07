@@ -37,7 +37,7 @@ class QtROS : public QThread {
     void quitNow();
     void moveHome();
     void testPTP(double q1, double q2, double q3, double q4, double q5, double q6);
-    void testServo(double q1, double q2, double q3, double q4, double q5, double q6, float time = 0.1f, float lookahead = 0.04f);
+    void testServo(rw::math::Q target, float time = 0.1f, float lookahead = 0.04f);
     void moveServo(rw::math::Q target);
     void updateServo(rw::math::Q target);
     void stopServo();

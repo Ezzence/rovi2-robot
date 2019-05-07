@@ -42,6 +42,7 @@ RobotPlugin::RobotPlugin():
 
     connect(this->btnPlanner, &QPushButton::released, [=](){
         rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+        _pathPlanner->MAX_TIME = boxMaxTime->value();
         emit signalPlan(target, this->boxPlanSelect->currentIndex());
     });
 
@@ -51,12 +52,14 @@ RobotPlugin::RobotPlugin():
     connect(this, &RobotPlugin::signalMoveServo, _qtRos, &QtROS::moveServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalUpdateServo, _qtRos, &QtROS::updateServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalStopServo, _qtRos, &QtROS::stopServo, Qt::ConnectionType::QueuedConnection);
+    connect(this, &RobotPlugin::signalTestServo, _qtRos, &QtROS::testServo, Qt::ConnectionType::QueuedConnection);
     connect(this->btnPTP, &QPushButton::pressed, [=](){
         _qtRos->testPTP(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
 
     });
     connect(this->btnServo, &QPushButton::released, [=](){
-        _qtRos->testServo(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value(), boxTime->value(), boxLookahead->value());
+        rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
+        emit signalTestServo(target, float(boxTime->value()), float(boxLookahead->value()));
 
     });
 

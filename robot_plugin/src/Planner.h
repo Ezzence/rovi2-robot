@@ -46,6 +46,10 @@ public:
     enum ExtendResult { Trapped, Reached, Advanced };
     enum PlanSelect { RW_RRT = 0, RRT = 1, ARRT = 2};
 
+    // Important Experiment Parameters
+    // ARRT
+    int MAX_TIME = 0;
+
 
 public slots:
 
@@ -91,7 +95,7 @@ private:
     double _distanceDelta = 0;
     double _costHeuristic = 0.5;
     double _costDelta = 0;
-    size_t _maxAttempts = 50000;
+    size_t _maxAttempts = 1000;
     size_t _k = 4;
     const Q* _tempQ1;
     const Q* _tempQ2;
