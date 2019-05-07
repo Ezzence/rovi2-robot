@@ -306,8 +306,10 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
                 delete _bestTree;
             }
             _bestTree = startTree;
+            Path reverse;
+            _bestTree->getRootPath(_bestTree->getLast(), reverse);
             result = Path();        // TODO: _path is empty here
-            _bestTree->getRootPath(_bestTree->getLast(), result);
+            result.insert(result.end(), reverse.rbegin(), reverse.rend());  // path needs to be reversed
             ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " ----------------------------------------------------------------------------------");
             debugPath(result);
 
