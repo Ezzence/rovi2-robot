@@ -60,6 +60,8 @@ signals:
 
 private:
 
+    double randQ();
+
     // default robwork RRT
     bool doQueryRWRRT(Q target, rw::trajectory::QPath &path);
 

@@ -7,6 +7,9 @@
 
 #include <rw/loaders.hpp>
 
+#include <cstdlib>
+#include <QDateTime>
+
 
 using namespace rw;
 using namespace rw::math;
@@ -27,6 +30,8 @@ Planner::Planner(models::WorkCell::Ptr wc, kinematics::State::Ptr state, models:
     _collisionDet = new proximity::CollisionDetector(_wc, rwlibs::proximitystrategies::ProximityStrategyFactory::makeDefaultCollisionStrategy());
 
     qRegisterMetaType<Q>("Q");
+
+    srand(static_cast<unsigned int>(QDateTime::currentMSecsSinceEpoch()));
 
     // TEST PATH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //    _path.push_back(Q(6, 0, -1.5, 0, -1.5, 0, 0));
@@ -117,7 +122,12 @@ void Planner::callPlan(Q target, int planSelect)
         break;
     }
     }
-    ROS_INFO_STREAM("planner finished, success: " << success);
+    ROS_INFO_STREAM("planner finished, success: " << success << " iteration: " << _planIterator);
+}
+
+double Planner::randQ()
+{
+    return double(rand())/RAND_MAX*12.52 - 6.26;
 }
 
 bool Planner::doQueryRWRRT(Q target, trajectory::QPath &path)
@@ -347,7 +357,7 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
     Q qNew = tree.getRoot().getValue();
     while(qNew != goal)
     {
-        ROS_INFO_STREAM("ARRT: grow");
+        //ROS_INFO_STREAM("ARRT: grow");
         const Q qTarget = chooseTargetARRT(tree.getRoot().getValue(), goal);
         if (qTarget != Q()){
             Node* parent;
@@ -370,7 +380,7 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
 
 const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
 {
-    ROS_INFO_STREAM("ARRT: choose");
+    //ROS_INFO_STREAM("ARRT: choose");
     std::uniform_real_distribution<float> dis(0, 1.f);
     float p = dis(_gen);
     if(p < _pGoal)
@@ -379,15 +389,19 @@ const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
     }
     else
     {
-        Q qNew = _sampler->sample();
+        //Q qNew = _sampler->sample();
+        Q qNew = Q(6, randQ(), randQ(), randQ(), randQ(), randQ(), randQ());
         size_t attempts = 0;
-        while(_metric->distance(start, qNew) + _metric->distance(qNew, goal) > _cost)
+        while(true)
         {
-            qNew = _sampler->sample();
+            if(_metric->distance(start, qNew) + _metric->distance(qNew, goal) < _cost && !inCollision(qNew)){   // this way, the path cost is checked before collision (faster)
+                break;
+            }
+            qNew = Q(6, randQ(), randQ(), randQ(), randQ(), randQ(), randQ());
             //ROS_INFO_STREAM("SAMPLE: " << qNew[0] << " " << qNew[1] << " " << qNew[2] << " " << qNew[3] << " " << qNew[4] << " " << qNew[5]);
             ++attempts;
             if(attempts > _maxAttempts){
-                ROS_WARN_STREAM("WARNING: no sample found within threshold");
+                //ROS_WARN_STREAM("WARNING: no sample found within threshold");
                 qNew = goal;         // in paper: return Q();
                 attempts = 0;
                 return Q();
