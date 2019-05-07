@@ -54,6 +54,8 @@ public:
 public slots:
 
     void callPlan(Q target, int planSelect);
+    bool inCollision(const Q &q);
+
 
 signals:
 
@@ -67,7 +69,6 @@ private:
 
     // RRT
     bool doQueryRRT(const Q start, const Q goal, trajectory::QPath& result);
-    bool inCollision(const Q &q);
     bool inCollision(RRTNode<Q>* a, const Q &b);
     const Q chooseTarget(Q goal);
     RRTNode<Q>* nearestNeighbor(const RRTTree<Q>& tree, const Q& q);

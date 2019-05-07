@@ -95,17 +95,18 @@ bool QtROS::movePathServo(rw::trajectory::QPath &path, rw::models::Device::Ptr d
 
 void QtROS::run()
 {
-  while(ros::ok() && !quitfromgui)
-  {
-    ros::spinOnce();
-    QCoreApplication::processEvents();
+    while(ros::ok() && !quitfromgui)
+    {
+        ros::spinOnce();
+        QCoreApplication::processEvents();
 
-    // Adjust the sleep to, according to how often you will check ROS for new messages
-    ros::Duration(0.01).sleep();
-  }
-  if (!quitfromgui)
-  {
-    emit rosQuits();
-    ROS_INFO("ROS-Node Terminated\n");
-  }
+        // Adjust the sleep to, according to how often you will check ROS for new messages
+        ros::Duration(0.01).sleep();
+    }
+    if (!quitfromgui)
+    {
+        _robot->closePersistentConnections();
+        emit rosQuits();
+        ROS_INFO("ROS-Node Terminated\n");
+    }
 }

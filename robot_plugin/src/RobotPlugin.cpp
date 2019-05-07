@@ -61,6 +61,12 @@ RobotPlugin::RobotPlugin():
             boxQ5->setValue(s.front()[4]);
             boxQ6->setValue(s.front()[5]);
         }
+        //Transform3D<> tr = _device->baseTend(_state);
+        //std::cout<<"Base To End = "<< tr.P()[0] << " " << tr.P()[1] << " " << tr.P()[2] << " " << std::endl;
+        //Frame* fTCP = _wc->findFrame("TCP");_device->getEnd();
+        //tr = _device->baseTframe(fTCP, _state);
+        //std::cout<<"Base To TCP = "<< tr.P()[0] << " " << tr.P()[1] << " " << tr.P()[2] << " " << std::endl;
+
     });
 
     _qtRos = new QtROS();
@@ -129,6 +135,7 @@ void RobotPlugin::open(WorkCell* workcell)
     _wc = workcell;
     _state = _wc->getDefaultState();
     _device = _wc->findDevice(deviceName);
+    _device->setBounds(Device::QBox(Q(6, 1.0, -2.0, -6.26, -6.26, -6.26, -6.26), Q(6, 2.5, 0, 6.26, 6.26, 6.26, 6.26)));
 
 }
 
@@ -214,14 +221,26 @@ void RobotPlugin::timer()
 void RobotPlugin::inverseKinematics(rw::common::Ptr<Device> device, const State &state, const Transform3D<> &target, std::vector<Q> &solutions)
 {
     invkin::JacobianIKSolver solver(device, state);
+    solver.setEnableInterpolation(true);
+    solver.setClampToBounds(true);
+    Transform3D<double> tcp = solver.getTCP()->fTf(device->getBase(), state);
+    std::cout<<"TCP = x: "<< tcp.P()[0] << " y: " << tcp.P()[1] << " z: " << tcp.P()[2] << std::endl;
     solutions = solver.solve(target, state);
     if(solutions.empty()){
         ROS_INFO_STREAM("No IK solution found.");
     }
     else
     {
-        for(Q q : solutions) {
-            std::cout<<"Solution = "<<q<<std::endl;
+        for(auto it = solutions.begin(); it != solutions.end(); ++it) {
+            if(!_pathPlanner->inCollision(*it.base())){
+                std::cout<<"Solution = "<< *it.base()*180.0/M_PI <<std::endl;
+            }
+            else{
+                solutions.erase(it--);
+            }
+        }
+        if(solutions.empty()){
+            ROS_INFO_STREAM("No collision free IK solution found.");
         }
     }
 }
