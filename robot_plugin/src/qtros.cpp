@@ -5,6 +5,8 @@
 
 #define SUBSCRIBER "/caros_universalrobot/caros_serial_device_service_interface/robot_state"
 
+#define SERVO_TIME 2.f
+
 QtROS::QtROS()
 {
 
@@ -60,7 +62,7 @@ void QtROS::testServo(rw::math::Q target, float time, float lookahead)
 
 void QtROS::moveServo(rw::math::Q target)
 {
-    _robot->moveServoQ(target, 1.f, 0.1f, 300.f);
+    _robot->moveServoQ(target, SERVO_TIME, 0.1f, 300.f);
 }
 
 void QtROS::updateServo(rw::math::Q target)

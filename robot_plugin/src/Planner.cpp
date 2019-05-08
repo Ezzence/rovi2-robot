@@ -52,6 +52,7 @@ void Planner::run()
     while(true)
     {
         QCoreApplication::processEvents();
+        this->msleep(50);
     }
 }
 
@@ -94,26 +95,27 @@ void Planner::debugTree(RRTTree<Q> &tree)
     }
 }
 
-void Planner::callPlan(Q target, int planSelect)
+void Planner::callPlan(Q start, Q target, int planSelect)
 {
-    _path.clear();
+    //_path.clear();
+    _planType = planSelect;
     _planIterator = 0;
     bool success = false;
     switch (planSelect)
     {
     case PlanSelect::RW_RRT:
     {
-        success = doQueryRWRRT(target, _path);
+        success = doQueryRWRRT(start, target, _path);
         break;
     }
     case PlanSelect::RRT:
     {
-        success = doQueryRRT(_device->getQ(*_state), target, _path);
+        success = doQueryRRT(start, target, _path);
         break;
     }
     case PlanSelect::ARRT:
     {
-        success = doQueryARRT(_device->getQ(*_state), target, _path);
+        success = doQueryARRT(start, target, _path);
         break;
     }
     default:
@@ -130,10 +132,11 @@ double Planner::randQ()
     return double(rand())/RAND_MAX*12.52 - 6.26;
 }
 
-bool Planner::doQueryRWRRT(Q target, trajectory::QPath &path)
+bool Planner::doQueryRWRRT(Q start, Q target, trajectory::QPath &path)
 {
-    Q pos = _device->getQ(*_state);
+    Q pos = start;
     //rw::trajectory::Path<Q> path;
+    path.clear();
     _planner->query(pos, target, path);
 
     debugPath(path);
@@ -178,6 +181,7 @@ bool Planner::doQueryRRT(const Q start, const Q goal, Path& result)
         // path.
         if (growTree(startTree, qAttr) == Reached && growTree(goalTree, qAttr) == Reached)
         {
+            result.clear();
             getPath(startTree, goalTree, result);
             debugPath(result);
             return true;
@@ -311,15 +315,25 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
 
         if(costed != 0)
         {
-            ROS_INFO_STREAM("ARRT: DEBUG3");
+            //ROS_INFO_STREAM("ARRT: DEBUG3");
             if(_bestTree != nullptr){
                 delete _bestTree;
             }
             _bestTree = startTree;
             Path reverse;
             _bestTree->getRootPath(_bestTree->getLast(), reverse);
-            result = Path();        // TODO: _path is empty here
-            result.insert(result.end(), reverse.rbegin(), reverse.rend());  // path needs to be reversed
+            if(!_iterative){
+                ROS_INFO_STREAM("------- NON ITERATIVE -------------------------------------");
+                result = Path();        // TODO: _path is empty here
+                result.insert(result.end(), reverse.rbegin(), reverse.rend());  // path needs to be reversed
+            }
+            else
+            {
+                ROS_INFO_STREAM("------- ITERATIVE -------------------------------------");
+                _tmpPath = Path();
+                _tmpPath.insert(_tmpPath.end(), reverse.rbegin(), reverse.rend());  // path needs to be reversed
+                emit signalPlanChange();
+            }
             ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " ----------------------------------------------------------------------------------");
             debugPath(result);
 
@@ -364,7 +378,7 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
             qNew = extendARRT(tree, goal, qTarget, parent);
             if(qNew != Q()){
                 tree.add(qNew, parent);
-                ROS_INFO_STREAM("ARRT: DEBUG");
+                //ROS_INFO_STREAM("ARRT: DEBUG");
                 //debugTree(tree);
             }
         }
@@ -373,7 +387,7 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
         }
     }
     Path path;
-    ROS_INFO_STREAM("ARRT: DEBUG2");
+    //ROS_INFO_STREAM("ARRT: DEBUG2");
     tree.getRootPath(tree.getLast(), path);
     return getPathCost(path);
 }
@@ -407,7 +421,7 @@ const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
                 return Q();
             }
         }
-        ROS_INFO_STREAM("ARRT: SAMPLED");
+        //ROS_INFO_STREAM("ARRT: SAMPLED");
         return qNew;
     }
 }

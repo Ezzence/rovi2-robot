@@ -33,7 +33,7 @@ public:
 
     virtual void initialize();
 
-private slots:
+public slots:
     void btnPressed();
     void timer();
     void inverseKinematics(rw::common::Ptr<models::Device> device, const kinematics::State& state, const Transform3D<>& target, std::vector<Q>& solutions);
@@ -41,11 +41,13 @@ private slots:
     void stateChangedListener(const rw::kinematics::State& state);
     void newState(rw::math::Q pos);
 
+    void planChange();
+
 signals:
     void quitNow();
     void moveHome();
 
-    void signalPlan(Q target, int planSelect);
+    void signalPlan(Q start, Q target, int planSelect);
     void signalMoveServo(Q target);
     void signalUpdateServo(Q target);
     void signalStopServo();
@@ -63,6 +65,7 @@ private:
 
     bool _movingServo = false;
     bool _movingStart = false;
+    bool _planChanged = false;
     size_t _pathIterator = 0;
 
 

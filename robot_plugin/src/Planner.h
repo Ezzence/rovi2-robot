@@ -41,10 +41,13 @@ public:
     void debugPath(rw::trajectory::QPath &path);
     void debugTree(RRTTree<Q>& tree);
 
-    rw::trajectory::QPath _path;
-
     enum ExtendResult { Trapped, Reached, Advanced };
-    enum PlanSelect { RW_RRT = 0, RRT = 1, ARRT = 2};
+    enum PlanSelect { RW_RRT = 0, RRT = 1, ARRT = 2, ARRT2 = 3, ARRTC = 4};
+    int _planType = 999;        ///< (not valid plan type at start)
+    bool _iterative = false;    ///< should be true if a plan is already being executed on the robot
+
+    trajectory::QPath _path;
+    trajectory::QPath _tmpPath;
 
     // Important Experiment Parameters
     // ARRT
@@ -53,19 +56,20 @@ public:
 
 public slots:
 
-    void callPlan(Q target, int planSelect);
+    void callPlan(Q start, Q target, int planSelect);
     bool inCollision(const Q &q);
 
 
 signals:
 
+    void signalPlanChange();
 
 private:
 
     double randQ();
 
     // default robwork RRT
-    bool doQueryRWRRT(Q target, rw::trajectory::QPath &path);
+    bool doQueryRWRRT(Q start, Q target, trajectory::QPath &path);
 
     // RRT
     bool doQueryRRT(const Q start, const Q goal, trajectory::QPath& result);
