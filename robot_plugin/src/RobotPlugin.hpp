@@ -52,6 +52,7 @@ signals:
     void signalUpdateServo(Q target);
     void signalStopServo();
     void signalTestServo(Q target, float time, float lookAheadTime);
+    void signalThreadTest();
 
 private:
 

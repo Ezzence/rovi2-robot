@@ -5,6 +5,8 @@
 #include <QThread>
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QDateTime>
+#include <cstdlib>
 
 #include <ros/ros.h>
 #include <rw/models.hpp>
@@ -31,8 +33,13 @@ public:
 
     }
     // weird bug with robwork signature _ZTV7Planner was because this class was not added into the cmake with the QT_WRAPPER_CPP
-    Planner(rw::models::WorkCell::Ptr wc, rw::kinematics::State::Ptr state, rw::models::Device::Ptr device, QObject* parent = nullptr);
-    ~Planner(){}
+    Planner(rw::models::WorkCell::Ptr wc, rw::kinematics::State::Ptr state, rw::models::Device::Ptr device);
+    ~Planner()
+    {
+        qRegisterMetaType<Q>("Q");
+
+        srand(static_cast<unsigned int>(QDateTime::currentMSecsSinceEpoch()));
+    }
 
     void run();
 
@@ -49,6 +56,10 @@ public:
     trajectory::QPath _path;
     trajectory::QPath _tmpPath;
 
+    models::WorkCell::Ptr _wc;
+    kinematics::State::Ptr _state;
+    models::Device::Ptr _device;
+
     // Important Experiment Parameters
     // ARRT
     int MAX_TIME = 0;
@@ -58,6 +69,7 @@ public slots:
 
     void callPlan(Q start, Q target, int planSelect);
     bool inCollision(const Q &q);
+    void threadTest();
 
 
 signals:
@@ -111,10 +123,6 @@ private:
 
     std::random_device _rd;
     std::mt19937 _gen;
-
-    models::WorkCell::Ptr _wc;
-    kinematics::State::Ptr _state;
-    models::Device::Ptr _device;
 
     proximity::CollisionDetector::Ptr _collisionDet;
 

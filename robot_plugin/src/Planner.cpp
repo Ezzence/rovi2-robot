@@ -7,9 +7,6 @@
 
 #include <rw/loaders.hpp>
 
-#include <cstdlib>
-#include <QDateTime>
-
 
 using namespace rw;
 using namespace rw::math;
@@ -20,14 +17,11 @@ typedef rw::trajectory::QPath Path;
 typedef Planner::ExtendResult ExtendResult;
 
 
-Planner::Planner(models::WorkCell::Ptr wc, kinematics::State::Ptr state, models::Device::Ptr device, QObject *parent) : QThread(parent), _gen(_rd())
+Planner::Planner(models::WorkCell::Ptr wc, kinematics::State::Ptr state, models::Device::Ptr device) :  _gen(_rd())
 {
     _wc = wc;
     _state = state;
     _device = device;
-
-    //_collisionDet = new proximity::CollisionDetector(wc.get(), rwlibs::proximitystrategies::ProximityStrategyYaobi::make());
-    _collisionDet = new proximity::CollisionDetector(_wc, rwlibs::proximitystrategies::ProximityStrategyFactory::makeDefaultCollisionStrategy());
 
     qRegisterMetaType<Q>("Q");
 
@@ -58,6 +52,9 @@ void Planner::run()
 
 bool Planner::initRRT()
 {
+    //_collisionDet = new proximity::CollisionDetector(wc.get(), rwlibs::proximitystrategies::ProximityStrategyYaobi::make());
+    _collisionDet = new proximity::CollisionDetector(_wc, rwlibs::proximitystrategies::ProximityStrategyFactory::makeDefaultCollisionStrategy());
+
     _constraint = pathplanning::QConstraint::make(_collisionDet, _device, *_state);
     //_detector = new proximity::CollisionDetector(_wc, rwlibs::proximitystrategies::ProximityStrategyFactory::makeDefaultCollisionStrategy());
 
@@ -204,6 +201,16 @@ bool Planner::doQueryRRT(const Q start, const Q goal, Path& result)
 bool Planner::inCollision(const Q& q)
 {
     return _pConstraint.getQConstraint().inCollision(q);
+}
+
+void Planner::threadTest()
+{
+    int i = 0;
+    while(true)
+    {
+        ROS_INFO_STREAM(this->currentThreadId());
+        this->msleep(100);
+    }
 }
 
 // 'node' is known to be collision free, but 'b' is not.

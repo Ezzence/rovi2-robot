@@ -63,14 +63,6 @@ RobotPlugin::RobotPlugin():
             boxQ5->setValue(s.front()[4]);
             boxQ6->setValue(s.front()[5]);
         }
-        connect(this->btnReset, &QPushButton::released, [=](){
-            boxQ1->setValue(1.57);
-            boxQ2->setValue(-1.57);
-            boxQ3->setValue(0);
-            boxQ4->setValue(-1.57);
-            boxQ5->setValue(-1.57);
-            boxQ6->setValue(0);
-        });
         //Transform3D<> tr = _device->baseTend(_state);
         //std::cout<<"Base To End = "<< tr.P()[0] << " " << tr.P()[1] << " " << tr.P()[2] << " " << std::endl;
         //Frame* fTCP = _wc->findFrame("TCP");_device->getEnd();
@@ -78,10 +70,19 @@ RobotPlugin::RobotPlugin():
         //std::cout<<"Base To TCP = "<< tr.P()[0] << " " << tr.P()[1] << " " << tr.P()[2] << " " << std::endl;
 
     });
+    connect(this->btnReset, &QPushButton::released, [=](){
+        boxQ1->setValue(1.57);
+        boxQ2->setValue(-1.57);
+        boxQ3->setValue(0);
+        boxQ4->setValue(-1.57);
+        boxQ5->setValue(-1.57);
+        boxQ6->setValue(0);
+        emit signalThreadTest();
+    });
 
+    // --------- QTROS
     _qtRos = new QtROS();
 
-    // connect QtROS
     connect(this, &RobotPlugin::signalMoveServo, _qtRos, &QtROS::moveServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalUpdateServo, _qtRos, &QtROS::updateServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalStopServo, _qtRos, &QtROS::stopServo, Qt::ConnectionType::QueuedConnection);
@@ -113,6 +114,14 @@ RobotPlugin::RobotPlugin():
     qRegisterMetaType<rw::math::Q>("rw::math::Q");
     //qRegisterMetaType<trajectory::QPath>();
     connect(_qtRos, SIGNAL(newState(rw::math::Q)), this, SLOT(newState(rw::math::Q)));
+
+    // ----------- PLANNER
+    //initialize path planner
+    _pathPlanner = new Planner();
+    // connect Planner
+    connect(this, &RobotPlugin::signalPlan, _pathPlanner, &Planner::callPlan, Qt::ConnectionType::QueuedConnection);
+    connect(_pathPlanner, &Planner::signalPlanChange, this, &RobotPlugin::planChange, Qt::ConnectionType::QueuedConnection);
+    connect(this, &RobotPlugin::signalThreadTest, _pathPlanner, &Planner::threadTest, Qt::ConnectionType::QueuedConnection);
 
 }
 
@@ -169,17 +178,15 @@ void RobotPlugin::btnPressed()
     QObject *obj = sender();
     if(obj==_btn0)
     {
-        //initialize path planner
-        _pathPlanner = new Planner(_wc, &_state, _device);
-        // connect Planner
-        connect(this, &RobotPlugin::signalPlan, _pathPlanner, &Planner::callPlan, Qt::ConnectionType::QueuedConnection);
-        connect(_pathPlanner, &Planner::signalPlanChange, this, &RobotPlugin::planChange, Qt::ConnectionType::QueuedConnection);
+        _pathPlanner->_wc = _wc;
+        _pathPlanner->_state = &_state;
+        _pathPlanner->_device = _device;
         bool done = _pathPlanner->initRRT();
         ROS_INFO_STREAM("planner init done" << done);
         _pathPlanner->start();
 
-        log().info() << "Start\n";
         _qtRos->start();
+        log().info() << "Start\n " << QApplication::instance()->thread()->currentThreadId() << "\n " << _qtRos->currentThreadId();
 
     }
     else if(obj==_btn1)
