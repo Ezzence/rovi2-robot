@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 #include <QDateTime>
 #include <cstdlib>
+#include <random>
 
 #include <ros/ros.h>
 #include <rw/models.hpp>
@@ -25,7 +26,7 @@ using namespace rw;
 using namespace rw::math;
 using namespace rwlibs::pathplanners;
 
-class Planner : public QThread
+class Planner : public QObject
 {
     Q_OBJECT
 public:
@@ -69,8 +70,6 @@ public slots:
 
     void callPlan(Q start, Q target, int planSelect);
     bool inCollision(const Q &q);
-    void threadTest();
-
 
 signals:
 

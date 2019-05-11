@@ -41,15 +41,6 @@ Planner::Planner(models::WorkCell::Ptr wc, kinematics::State::Ptr state, models:
 
 }
 
-void Planner::run()
-{
-    while(true)
-    {
-        QCoreApplication::processEvents();
-        this->msleep(50);
-    }
-}
-
 bool Planner::initRRT()
 {
     //_collisionDet = new proximity::CollisionDetector(wc.get(), rwlibs::proximitystrategies::ProximityStrategyYaobi::make());
@@ -201,16 +192,6 @@ bool Planner::doQueryRRT(const Q start, const Q goal, Path& result)
 bool Planner::inCollision(const Q& q)
 {
     return _pConstraint.getQConstraint().inCollision(q);
-}
-
-void Planner::threadTest()
-{
-    int i = 0;
-    while(true)
-    {
-        ROS_INFO_STREAM(this->currentThreadId());
-        this->msleep(100);
-    }
 }
 
 // 'node' is known to be collision free, but 'b' is not.

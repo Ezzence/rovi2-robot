@@ -36,7 +36,7 @@ public:
 public slots:
     void btnPressed();
     void timer();
-    void inverseKinematics(rw::common::Ptr<models::Device> device, const kinematics::State& state, const Transform3D<>& target, std::vector<Q>& solutions);
+    void inverseKinematics(rw::common::Ptr<models::Device> device, const kinematics::State& state, const Transform3D<>& target, std::vector<rw::math::Q>& solutions);
 
     void stateChangedListener(const rw::kinematics::State& state);
     void newState(rw::math::Q pos);
@@ -47,18 +47,18 @@ signals:
     void quitNow();
     void moveHome();
 
-    void signalPlan(Q start, Q target, int planSelect);
-    void signalMoveServo(Q target);
-    void signalUpdateServo(Q target);
+    void signalPlan(rw::math::Q start, rw::math::Q target, int planSelect);
+    void signalMoveServo(rw::math::Q target);
+    void signalUpdateServo(rw::math::Q target);
     void signalStopServo();
-    void signalTestServo(Q target, float time, float lookAheadTime);
-    void signalThreadTest();
+    void signalTestServo(rw::math::Q target, float time, float lookAheadTime);
 
 private:
 
     QTimer* _timer;
     QtROS *_qtRos;
     Planner* _pathPlanner = nullptr;
+    QThread _plannerThread;
 
     rw::models::WorkCell::Ptr _wc;
     rw::kinematics::State _state;

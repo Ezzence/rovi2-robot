@@ -77,7 +77,6 @@ RobotPlugin::RobotPlugin():
         boxQ4->setValue(-1.57);
         boxQ5->setValue(-1.57);
         boxQ6->setValue(0);
-        emit signalThreadTest();
     });
 
     // --------- QTROS
@@ -118,10 +117,11 @@ RobotPlugin::RobotPlugin():
     // ----------- PLANNER
     //initialize path planner
     _pathPlanner = new Planner();
+    _pathPlanner->moveToThread(&_plannerThread);
     // connect Planner
+    connect(&_plannerThread, &QThread::finished, _pathPlanner, &QObject::deleteLater);
     connect(this, &RobotPlugin::signalPlan, _pathPlanner, &Planner::callPlan, Qt::ConnectionType::QueuedConnection);
     connect(_pathPlanner, &Planner::signalPlanChange, this, &RobotPlugin::planChange, Qt::ConnectionType::QueuedConnection);
-    connect(this, &RobotPlugin::signalThreadTest, _pathPlanner, &Planner::threadTest, Qt::ConnectionType::QueuedConnection);
 
 }
 
@@ -183,10 +183,10 @@ void RobotPlugin::btnPressed()
         _pathPlanner->_device = _device;
         bool done = _pathPlanner->initRRT();
         ROS_INFO_STREAM("planner init done" << done);
-        _pathPlanner->start();
+        _plannerThread.start();
 
         _qtRos->start();
-        log().info() << "Start\n " << QApplication::instance()->thread()->currentThreadId() << "\n " << _qtRos->currentThreadId();
+        log().info() << "Start\n " << QApplication::instance()->thread()->currentThreadId();
 
     }
     else if(obj==_btn1)
