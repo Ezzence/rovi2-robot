@@ -17,7 +17,14 @@
 
 <Frame name="ToolBase" refframe="TCP">
 	<!-- <RPY>-90 0 0</RPY><Pos>0.0 -0.058 0.0</Pos> -->
-	<RPY>0 -90 90</RPY><Pos>0.0 0 0.093</Pos>
+	<RPY>0 -90 90</RPY><Pos>0.0 0 0.075</Pos> <!-- 0.093 -->
+</Frame>
+
+<Frame name="Tool" refframe="ToolBase">
+	<RPY> -90 0 90 </RPY> <Pos> 0.0 0.0 0.0 </Pos>
+	<Drawable name="ToolGeo" refframe="Tool">
+		<Polytope file="geometry/box" />
+	</Drawable>
 </Frame>
 
  <Include file="Device.xml" />

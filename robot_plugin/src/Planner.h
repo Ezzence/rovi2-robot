@@ -60,16 +60,20 @@ public:
     models::WorkCell::Ptr _wc;
     kinematics::State::Ptr _state;
     models::Device::Ptr _device;
+    Metric<Q>::Ptr _metric;
 
     // Important Experiment Parameters
     // ARRT
     int MAX_TIME = 0;
+    double _cost = DBL_MAX;
 
 
 public slots:
 
     void callPlan(Q start, Q target, int planSelect);
     bool inCollision(const Q &q);
+
+    static double getPathCost(trajectory::QPath& path, rw::math::Metric<Q>& metric);
 
 signals:
 
@@ -103,11 +107,9 @@ private:
     const Q extendARRT(RRTTree<Q>& tree, const Q& goal, const Q& qTarget, RRTNode<Q>* & parent);
     std::vector<RRTNode<Q>*> kNearestNeighbours(const Q& qTarget, size_t k, RRTTree<Q>& tree);
     //const Q generateExtenstion(RRTTree<Q>& tree, const Q& q);
-    double getPathCost(trajectory::QPath& path);
 
     QElapsedTimer _elapsedTimer;
     RRTTree<Q>* _bestTree = nullptr;
-    double _cost = DBL_MAX;
     double _costEpsilon = 0.01;
     double _distanceHeuristic = 0.5;
     double _distanceDelta = 0;
@@ -124,8 +126,6 @@ private:
     std::mt19937 _gen;
 
     proximity::CollisionDetector::Ptr _collisionDet;
-
-    Metric<Q>::Ptr _metric;
 
     // The q constraint is to avoid collisions.
     rw::pathplanning::QConstraint::Ptr _constraint;

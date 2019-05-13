@@ -292,7 +292,9 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
     Tree* startTree;
     _distanceHeuristic = 1.0;
     _costHeuristic = 0;
-    _cost = DBL_MAX;
+    if(!_iterative){
+        _cost = DBL_MAX;
+    }
     _elapsedTimer.start();
 
     while (true)
@@ -377,7 +379,7 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
     Path path;
     //ROS_INFO_STREAM("ARRT: DEBUG2");
     tree.getRootPath(tree.getLast(), path);
-    return getPathCost(path);
+    return getPathCost(path, *_metric);
 }
 
 const Q Planner::chooseTargetARRT(const Q &start, const Q &goal)
@@ -438,10 +440,10 @@ const Q Planner::extendARRT(RRTTree<Q> &tree, const Q& goal, const Q &qTarget, N
         {
             Path path;
             tree.getRootPath(*qTree, path);
-            double cost = getPathCost(path) + _metric->distance(qTree->getValue(), qNew) + _metric->distance(qNew, goal);
+            double cost = getPathCost(path, *_metric) + _metric->distance(qTree->getValue(), qNew) + _metric->distance(qNew, goal);
             if(cost < _cost){
                 parent = qTree;
-                ROS_INFO_STREAM("ARRT: EXTEND");
+                //ROS_INFO_STREAM("ARRT: EXTEND");
                 return qNew;
             }
         }
@@ -479,13 +481,12 @@ std::vector<RRTNode<Q> *> Planner::kNearestNeighbours(const Q &qTarget, size_t k
 //
 //}
 
-double Planner::getPathCost(trajectory::QPath &path)
+double Planner::getPathCost(trajectory::QPath &path, rw::math::Metric<Q>& metric)
 {
     double cost = 0;
     for(size_t i = 0; i < path.size() - 1; ++i)
     {
-        cost += _metric->distance(path.at(i), path.at(i+1));
+        cost += metric.distance(path.at(i), path.at(i+1));
     }
     return cost;
-
 }
