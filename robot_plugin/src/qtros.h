@@ -10,6 +10,7 @@
 #include <QThread>
 #include <QObject>
 #include <QCoreApplication>
+#include <QTimer>
 #include <rw/math/Q.hpp>
 #include <rw/trajectory.hpp>
 #include <rw/models.hpp>
@@ -18,7 +19,7 @@
 #include <caros/serial_device_si_proxy.h>
 
 
-class QtROS : public QThread {
+class QtROS : public QObject {
   Q_OBJECT
 
   public:
@@ -28,7 +29,7 @@ class QtROS : public QThread {
     QtROS();
 
     /// This method contains the ROS event loop. Feel free to modify 
-    void run();
+    //void run();
 
   public slots:
 
@@ -36,6 +37,7 @@ class QtROS : public QThread {
     ///Connect to aboutToQuit signals, to stop the thread
     void quitNow();
     void moveHome();
+    void startTimer();
     void testPTP(double q1, double q2, double q3, double q4, double q5, double q6);
     void testServo(rw::math::Q target, float time = 0.1f, float lookahead = 0.04f);
     void moveServo(rw::math::Q target);
@@ -56,11 +58,15 @@ class QtROS : public QThread {
     /// Callback function
     void stateCallback(const caros_control_msgs::RobotState & msg);
 
+    void rosTimer();
+
     bool quitfromgui;
 
     ros::NodeHandle _nh;
     ros::Subscriber _sub;
     caros::SerialDeviceSIProxy* _robot;
+
+    QTimer* _rosTimer;
 
 
 };

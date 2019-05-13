@@ -48,6 +48,8 @@ signals:
     void moveHome();
 
     void signalPlan(rw::math::Q start, rw::math::Q target, int planSelect);
+
+    void signalStartTimer();
     void signalMoveServo(rw::math::Q target);
     void signalUpdateServo(rw::math::Q target);
     void signalStopServo();
@@ -59,6 +61,7 @@ private:
     QtROS *_qtRos;
     Planner* _pathPlanner = nullptr;
     QThread _plannerThread;
+    QThread _rosThread;
 
     rw::models::WorkCell::Ptr _wc;
     rw::kinematics::State _state;

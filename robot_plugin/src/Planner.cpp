@@ -23,7 +23,7 @@ Planner::Planner(models::WorkCell::Ptr wc, kinematics::State::Ptr state, models:
     _state = state;
     _device = device;
 
-    qRegisterMetaType<Q>("Q");
+    //qRegisterMetaType<Q>("Q");
 
     srand(static_cast<unsigned int>(QDateTime::currentMSecsSinceEpoch()));
 

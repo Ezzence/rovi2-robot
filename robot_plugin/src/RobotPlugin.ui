@@ -312,9 +312,9 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QPushButton" name="btnPTP">
+         <widget class="QPushButton" name="btnStop">
           <property name="text">
-           <string>movePTP</string>
+           <string>STOP</string>
           </property>
          </widget>
         </item>

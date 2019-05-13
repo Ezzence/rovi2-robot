@@ -5,7 +5,7 @@
 
 #define SUBSCRIBER "/caros_universalrobot/caros_serial_device_service_interface/robot_state"
 
-#define SERVO_TIME 2.f
+#define SERVO_TIME 1.5f
 
 QtROS::QtROS()
 {
@@ -16,6 +16,9 @@ QtROS::QtROS()
   _sub = _nh.subscribe(SUBSCRIBER, 1, &QtROS::stateCallback, this);
 
   _robot = new caros::SerialDeviceSIProxy(_nh, "caros_universalrobot");
+
+  _rosTimer = new QTimer(this);
+  connect(_rosTimer, &QTimer::timeout, this, &QtROS::rosTimer);
 
   quitfromgui = false;
 }
@@ -38,11 +41,30 @@ void QtROS::stateCallback(const caros_control_msgs::RobotState & msg)
 
 }
 
+void QtROS::rosTimer()
+{
+    if(ros::ok() && !quitfromgui)
+    {
+        ros::spinOnce();
+    }
+    if (quitfromgui)
+    {
+        _robot->closePersistentConnections();
+        emit rosQuits();
+        ROS_INFO("ROS-Node Terminated\n");
+    }
+}
+
 void QtROS::moveHome()
 {
     ROS_INFO("Called move home");
     rw::math::Q home = rw::math::Q(6, 0, -M_PI/2.0, 0, -M_PI/2.0, 0, 0);
     _robot->movePtp(home);
+}
+
+void QtROS::startTimer()
+{
+    _rosTimer->start(50);
 }
 
 void QtROS::testPTP(double q1, double q2, double q3, double q4, double q5, double q6)
@@ -56,8 +78,8 @@ void QtROS::testServo(rw::math::Q target, float time, float lookahead)
 {
     ROS_INFO("Called robot moving test Servo");
     _robot->moveServoQ(target, time, lookahead, 300.f);
-    this->wait((static_cast<unsigned long>(time)*1000));              // QThread::wait is in miliseconds
-    _robot->moveServoStop();
+    //this->wait((static_cast<unsigned long>(time)*1000));              // QThread::wait is in miliseconds
+    //_robot->moveServoStop();
 }
 
 void QtROS::moveServo(rw::math::Q target)
@@ -95,7 +117,7 @@ bool QtROS::movePathServo(rw::trajectory::QPath &path, rw::models::Device::Ptr d
 
 
 
-void QtROS::run()
+/*void QtROS::run()
 {
     while(ros::ok() && !quitfromgui)
     {
@@ -111,4 +133,4 @@ void QtROS::run()
         emit rosQuits();
         ROS_INFO("ROS-Node Terminated\n");
     }
-}
+}*/

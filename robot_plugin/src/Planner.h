@@ -37,7 +37,7 @@ public:
     Planner(rw::models::WorkCell::Ptr wc, rw::kinematics::State::Ptr state, rw::models::Device::Ptr device);
     ~Planner()
     {
-        qRegisterMetaType<Q>("Q");
+        //qRegisterMetaType<Q>("Q");
 
         srand(static_cast<unsigned int>(QDateTime::currentMSecsSinceEpoch()));
     }

@@ -19,6 +19,7 @@ using namespace rw::sensor;
 using namespace rws;
 
 //Q_DECLARE_METATYPE(trajectory::QPath);
+Q_DECLARE_METATYPE(rw::math::Q);
 
 RobotPlugin::RobotPlugin():
     RobWorkStudioPlugin("robot plugin", QIcon(":/pa_icon.png"))
@@ -81,14 +82,17 @@ RobotPlugin::RobotPlugin():
 
     // --------- QTROS
     _qtRos = new QtROS();
+    _qtRos->moveToThread(&_rosThread);
+    connect(&_rosThread, &QThread::finished, _qtRos, &QObject::deleteLater);
+    connect(this, &RobotPlugin::signalStartTimer, _qtRos, &QtROS::startTimer);
 
     connect(this, &RobotPlugin::signalMoveServo, _qtRos, &QtROS::moveServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalUpdateServo, _qtRos, &QtROS::updateServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalStopServo, _qtRos, &QtROS::stopServo, Qt::ConnectionType::QueuedConnection);
     connect(this, &RobotPlugin::signalTestServo, _qtRos, &QtROS::testServo, Qt::ConnectionType::QueuedConnection);
-    connect(this->btnPTP, &QPushButton::pressed, [=](){
-        _qtRos->testPTP(boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
-
+    connect(this->btnStop, &QPushButton::released, [=](){
+        emit signalStopServo();
+        ROS_INFO_STREAM("STOPPING SERVO");
     });
     connect(this->btnServo, &QPushButton::released, [=](){
         rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
@@ -110,7 +114,7 @@ RobotPlugin::RobotPlugin():
     connect(this, SIGNAL(moveHome()), _qtRos, SLOT(moveHome()));
 
     // We need to register the type
-    qRegisterMetaType<rw::math::Q>("rw::math::Q");
+    //qRegisterMetaType<rw::math::Q>();
     //qRegisterMetaType<trajectory::QPath>();
     connect(_qtRos, SIGNAL(newState(rw::math::Q)), this, SLOT(newState(rw::math::Q)));
 
@@ -185,7 +189,9 @@ void RobotPlugin::btnPressed()
         ROS_INFO_STREAM("planner init done" << done);
         _plannerThread.start();
 
-        _qtRos->start();
+        //_qtRos->start();
+        _rosThread.start();
+        emit signalStartTimer();
         log().info() << "Start\n " << QApplication::instance()->thread()->currentThreadId();
 
     }
