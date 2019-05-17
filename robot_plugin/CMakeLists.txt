@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(robot_plugin)
 
+list(APPEND CMAKE_PREFIX_PATH /opt/ros/melodic)
+list(APPEND CMAKE_PREFIX_PATH /home/ada/workspace/ros_ws/devel)
+message(${CMAKE_PREFIX_PATH})
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages

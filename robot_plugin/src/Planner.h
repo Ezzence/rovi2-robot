@@ -56,6 +56,10 @@ public:
 
     trajectory::QPath _path;
     trajectory::QPath _tmpPath;
+    RRTTree<Q>* _startTree;
+    RRTTree<Q>* _goalTree;
+    RRTTree<Q>* _bestTree = nullptr;
+
 
     models::WorkCell::Ptr _wc;
     kinematics::State::Ptr _state;
@@ -107,9 +111,14 @@ private:
     const Q extendARRT(RRTTree<Q>& tree, const Q& goal, const Q& qTarget, RRTNode<Q>* & parent);
     std::vector<RRTNode<Q>*> kNearestNeighbours(const Q& qTarget, size_t k, RRTTree<Q>& tree);
     //const Q generateExtenstion(RRTTree<Q>& tree, const Q& q);
+    double getPathCost(trajectory::QPath& path);
+
+    // ARRTC
+    bool doQueryARRTC(const Q start, const Q goal, trajectory::QPath& result);
+    double growTreeARRTC(RRTTree<Q>& startTree, RRTTree<Q>& goalTree, const Q& start, const Q& goal);
+    bool connect(RRTTree<Q>& tree, Q& target);
 
     QElapsedTimer _elapsedTimer;
-    RRTTree<Q>* _bestTree = nullptr;
     double _costEpsilon = 0.01;
     double _distanceHeuristic = 0.5;
     double _distanceDelta = 0;
