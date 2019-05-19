@@ -88,6 +88,10 @@ void Planner::callPlan(Q start, Q target, int planSelect)
     //_path.clear();
     _planType = planSelect;
     _planIterator = 0;
+    _closestDistance = DBL_MAX;
+    _distanceHeuristic = 1.0;
+    _costHeuristic = 0;
+    _firstTime = INT_MAX;
     bool success = false;
     switch (planSelect)
     {
@@ -121,6 +125,48 @@ void Planner::callPlan(Q start, Q target, int planSelect)
 double Planner::randQ()
 {
     return double(rand())/RAND_MAX*12.52 - 6.26;
+}
+
+bool Planner::logCost(double cost)
+{
+    file.open("/home/ada/cost.txt", std::ios::out | std::ios::app);
+    if (file.fail()){
+        ROS_INFO_STREAM("FAILED TO WRITE FILE");
+        return false;
+    }
+    //make sure write fails with exception if something is wrong
+    file.exceptions(file.exceptions() | std::ios::failbit | std::ifstream::badbit);
+    file << cost << std::endl;
+    file.close();
+    return true;
+}
+
+bool Planner::logTime(int time)
+{
+    file2.open("/home/ada/first.txt", std::ios::out | std::ios::app);
+    if (file2.fail()){
+        ROS_INFO_STREAM("FAILED TO WRITE FILE");
+        return false;
+    }
+    //make sure write fails with exception if something is wrong
+    file2.exceptions(file2.exceptions() | std::ios::failbit | std::ifstream::badbit);
+    file2 << time << std::endl;
+    file2.close();
+    return true;
+}
+
+bool Planner::logIteration(size_t iter)
+{
+    file3.open("/home/ada/iter.txt", std::ios::out | std::ios::app);
+    if (file3.fail()){
+        ROS_INFO_STREAM("FAILED TO WRITE FILE");
+        return false;
+    }
+    //make sure write fails with exception if something is wrong
+    file3.exceptions(file3.exceptions() | std::ios::failbit | std::ifstream::badbit);
+    file3 << iter << std::endl;
+    file3.close();
+    return true;
 }
 
 bool Planner::doQueryRWRRT(Q start, Q target, trajectory::QPath &path)
@@ -293,8 +339,6 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
     }
 
     Tree* startTree;
-    _distanceHeuristic = 1.0;
-    _costHeuristic = 0;
     if(!_iterative){
         _cost = DBL_MAX;
     }
@@ -337,9 +381,14 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
         else
         {
             if(_planIterator > 0){
+                if(_log){
+                    logCost(_cost); logTime(_firstTime); logIteration(_planIterator);
+                }
                 return true;
             }
             else{
+                _debugTree = startTree;
+                ROS_INFO_STREAM("NO PLAN!!! debug tree set");
                 return false;
             }
         }
@@ -362,6 +411,9 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
     Q qNew = tree.getRoot().getValue();
     while(qNew != goal)
     {
+        if(qNew != Q() && _closestDistance < 1.0){
+            //ROS_INFO_STREAM("size: " << tree.size());
+        }
         //ROS_INFO_STREAM("ARRT: grow");
         const Q qTarget = chooseTargetARRT(tree.getRoot().getValue(), goal);
         if (qTarget != Q()){
@@ -369,16 +421,26 @@ double Planner::growTreeARRT(RRTTree<Q> &tree, const Q& goal)
             qNew = extendARRT(tree, goal, qTarget, parent);
             if(qNew != Q()){
                 tree.add(qNew, parent);
-                //ROS_INFO_STREAM("ARRT: DEBUG");
-                //debugTree(tree);
             }
         }
-        if(_elapsedTimer.elapsed() > MAX_TIME){
+        if(_elapsedTimer.elapsed() > MAX_TIME && !(_log && _planIterator == 0)) // make sure we get at least one path if logging
+        {
+            return 0;
+        }
+        else if(_elapsedTimer.elapsed() > MAX_TIME + 5000)     // still abort if way too much time
+        {
             return 0;
         }
     }
+
+    // debug
+    //_debugTree = &tree;
+    //ROS_INFO_STREAM("debug tree set");
+    // ----
+    if(_firstTime == INT_MAX){
+        _firstTime = int(_elapsedTimer.elapsed());
+    }
     Path path;
-    //ROS_INFO_STREAM("ARRT: DEBUG2");
     tree.getRootPath(tree.getLast(), path);
     return getPathCost(path, *_metric);
 }
@@ -514,8 +576,6 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
         return false;
     }
 
-    _distanceHeuristic = 1.0;
-    _costHeuristic = 0;
     if(!_iterative){
         _cost = DBL_MAX;
     }
@@ -562,6 +622,9 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
         else
         {
             if(_planIterator > 0){
+                if(_log){
+                    logCost(_cost); logTime(_firstTime); logIteration(_planIterator);
+                }
                 return true;
             }
             else{
@@ -594,16 +657,25 @@ double Planner::growTreeARRTC(RRTTree<Q> &startTree, RRTTree<Q> &goalTree, const
         const Q qTarget = chooseTargetARRT(tree->getRoot().getValue(), goal);
         if (qTarget != Q()){
             Node* parent;
-            qNew = extendARRT(*tree, goal, qTarget, parent);
+            qNew = extendARRT(*tree, tree2->getRoot().getValue(), qTarget, parent);
             if(qNew != Q()){
                 tree->add(qNew, parent);
                 connected = connect(*tree2, *tree, qNew);
                 //ROS_INFO_STREAM("ARRT: DEBUG");
             }
         }
-        if(_elapsedTimer.elapsed() > MAX_TIME){
+        if(_elapsedTimer.elapsed() > MAX_TIME && !(_log && _planIterator == 0)) // make sure we get at least one path if logging
+        {
             return 0;
         }
+        else if(_elapsedTimer.elapsed() > MAX_TIME + 5000)     // still abort if way too much time
+        {
+            return 0;
+        }
+    }
+
+    if(_firstTime == INT_MAX){
+        _firstTime = int(_elapsedTimer.elapsed());
     }
     Path path1, path2;
     // TODO: investigate

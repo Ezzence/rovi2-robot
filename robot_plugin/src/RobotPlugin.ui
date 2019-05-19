@@ -37,6 +37,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="btnMap">
+          <property name="text">
+           <string>tree</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_4">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -476,6 +483,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="boxLog">
+          <property name="text">
+           <string>Log</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_6">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -522,6 +536,26 @@
           </property>
           <property name="value">
            <number>1000</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>pGoal:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="boxP">
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.100000000000000</double>
           </property>
          </widget>
         </item>

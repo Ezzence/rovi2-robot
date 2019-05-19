@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <cstdlib>
 #include <random>
+#include <fstream>
 
 #include <ros/ros.h>
 #include <rw/models.hpp>
@@ -53,12 +54,17 @@ public:
     enum PlanSelect { RW_RRT = 0, RRT = 1, ARRT = 2, ARRT2 = 3, ARRTC = 4};
     int _planType = 999;        ///< (not valid plan type at start)
     bool _iterative = false;    ///< should be true if a plan is already being executed on the robot
+    bool _log = false;
+    std::ofstream file;
+    std::ofstream file2;
+    std::ofstream file3;
 
     trajectory::QPath _path;
     trajectory::QPath _tmpPath;
     RRTTree<Q>* _startTree = nullptr;
     RRTTree<Q>* _goalTree = nullptr;
     RRTTree<Q>* _bestTree = nullptr;
+    RRTTree<Q>* _debugTree = nullptr;
 
 
     models::WorkCell::Ptr _wc;
@@ -69,8 +75,11 @@ public:
     // Important Experiment Parameters
     // ARRT
     int MAX_TIME = 0;
+    int _firstTime = INT_MAX;
     double _cost = DBL_MAX;
+    double _closestDistance = DBL_MAX;
     double _costEpsilon = 0.01;
+    float _pGoal = 0.1f;
 
 
 public slots:
@@ -87,6 +96,9 @@ signals:
 private:
 
     double randQ();
+    bool logCost(double cost);
+    bool logTime(int time);
+    bool logIteration(size_t iter);
 
     // default robwork RRT
     bool doQueryRWRRT(Q start, Q target, trajectory::QPath &path);
@@ -102,7 +114,6 @@ private:
 
     double _resolution = 0.01;
     double _epsilon = 0.1;
-    float _pGoal = 0.1f;
     size_t _planIterator = 0;
 
     // ARRT
@@ -118,13 +129,13 @@ private:
     bool doQueryARRTC(const Q start, const Q goal, trajectory::QPath& result);
     double growTreeARRTC(RRTTree<Q>& startTree, RRTTree<Q>& goalTree, const Q& start, const Q& goal);
     bool connect(RRTTree<Q>& tree, RRTTree<Q>& otherTree, Q& target);
-    ExtendResult extendARRTC(RRTTree<Q>& tree, RRTTree<Q>& otherTree, const Q& q, RRTNode<Q>* qNearNode);
+   Planner::ExtendResult extendARRTC(RRTTree<Q>& tree, RRTTree<Q>& otherTree, const Q& q, RRTNode<Q>* qNearNode);
 
     QElapsedTimer _elapsedTimer;
     double _distanceHeuristic = 0.5;
-    double _distanceDelta = 0;
+    double _distanceDelta = 0.1;
     double _costHeuristic = 0.5;
-    double _costDelta = 0;
+    double _costDelta = 0.1;
     size_t _maxAttempts = 1000;
     size_t _k = 4;
     const Q* _tempQ1;

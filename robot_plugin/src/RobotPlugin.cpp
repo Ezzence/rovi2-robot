@@ -1,5 +1,7 @@
 #include "RobotPlugin.hpp"
 #include <math.h>
+#include <boost/foreach.hpp>
+
  
 #include <rws/RobWorkStudio.hpp>
 #include <qtimer.h>
@@ -46,6 +48,8 @@ RobotPlugin::RobotPlugin():
         rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
         _pathPlanner->MAX_TIME = boxMaxTime->value();
         _pathPlanner->_iterative = false;
+        _pathPlanner->_log = this->boxLog->isChecked();
+        _pathPlanner->_pGoal = this->boxP->value();
         emit signalPlan(_device->getQ(_state), target, this->boxPlanSelect->currentIndex());
     });
     connect(this->btnInv, &QPushButton::released, [=](){
@@ -78,6 +82,23 @@ RobotPlugin::RobotPlugin():
         boxQ4->setValue(-1.57);
         boxQ5->setValue(-1.57);
         boxQ6->setValue(0);
+    });
+    connect(this->btnMap, &QPushButton::released, [=](){
+        _pathPlanner->file.open("/home/ada/tree.txt", std::ios::out | std::ios::app);
+        if (_pathPlanner->file.fail()){
+            ROS_INFO_STREAM("FAILED TO WRITE FILE");
+        }
+        _device->setQ(Q(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value()), _state);
+        Transform3D<double> t = _device->baseTend(_state);
+        ROS_INFO_STREAM("GOAL POSITION: " << t.P()[0] << " " << t.P()[1] << " " << t.P()[2]);
+
+        BOOST_FOREACH(rwlibs::pathplanners::RRTNode<rw::math::Q>* node, _pathPlanner->_debugTree->getNodes()) {
+            _device->setQ(node->getValue(), _state);
+            Transform3D<double> t = _device->baseTend(_state);
+            _pathPlanner->file << t.P()[0] << " " << t.P()[1] << " " << t.P()[2] << std::endl;
+        }
+
+        _pathPlanner->file.close();
     });
 
     // --------- QTROS

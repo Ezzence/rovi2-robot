@@ -21,7 +21,19 @@
 </Frame>
 
 <Frame name="Obstacle" refframe="Robot">
-	<RPY> 0 0 0 </RPY> <Pos> 0 -0.5 0.9 </Pos>
+	<RPY> 0 0 0 </RPY> <Pos> -0.1 -0.4 0.7 </Pos>
+	<Drawable name="ObstacleGeo" refframe="Obstacle">
+		<Polytope file="Geometry/box" />
+	</Drawable>
+</Frame>
+<Frame name="Obstacle1" refframe="Robot">
+	<RPY> 0 0 0 </RPY> <Pos> 0.1 -0.4 0.7 </Pos>
+	<Drawable name="ObstacleGeo" refframe="Obstacle">
+		<Polytope file="Geometry/box" />
+	</Drawable>
+</Frame>
+<Frame name="Obstacle2" refframe="Robot">
+	<RPY> 0 0 0 </RPY> <Pos> 0.2 -0.4 0.7 </Pos>
 	<Drawable name="ObstacleGeo" refframe="Obstacle">
 		<Polytope file="Geometry/box" />
 	</Drawable>
