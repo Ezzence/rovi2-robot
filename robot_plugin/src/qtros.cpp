@@ -5,7 +5,7 @@
 
 #define SUBSCRIBER "/caros_universalrobot/caros_serial_device_service_interface/robot_state"
 
-#define SERVO_TIME 2.f
+#define SERVO_TIME 0.5f
 
 QtROS::QtROS()
 {

@@ -222,11 +222,11 @@ void RobotPlugin::timer()
             if (boxIterative->isChecked() && _pathPlanner->_path.size() > 2)
             {
                 rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
-                _pathPlanner->MAX_TIME = 1500;                                  // 1.5s < 2*1s for servoing
+                _pathPlanner->MAX_TIME = 400;                                  // 1.5s < 2*1s for servoing
                 _pathPlanner->_iterative = true;
                 trajectory::QPath alternative;
                 alternative.insert(alternative.end(), _pathPlanner->_path.begin()+2, _pathPlanner->_path.end());
-                _pathPlanner->_cost = Planner::getPathCost(alternative, *_pathPlanner->_metric);
+                _pathPlanner->_cost = (1 - _pathPlanner->_costEpsilon)*Planner::getPathCost(alternative, *_pathPlanner->_metric);
 
                 emit signalPlan(_pathPlanner->_path.at(2), target, this->boxPlanSelect->currentIndex());   // assumption: previous planning is already finished by now
                 // TODO: set max path cost of next iteration somehow
@@ -264,11 +264,11 @@ void RobotPlugin::timer()
                         ROS_INFO_STREAM("NO NO NO PLAN CHANGE");
                     }
                     rw::math::Q target(6, boxQ1->value(), boxQ2->value(), boxQ3->value(), boxQ4->value(), boxQ5->value(), boxQ6->value());
-                    _pathPlanner->MAX_TIME = 1500;                                  // 1.5s < 2*1s for servoing
+                    _pathPlanner->MAX_TIME = 400;                                  // 1.5s < 2*1s for servoing
                     _pathPlanner->_iterative = true;
                     trajectory::QPath alternative;
                     alternative.insert(alternative.end(), _pathPlanner->_path.begin() + int(_pathIterator) + 2, _pathPlanner->_path.end());
-                    _pathPlanner->_cost = Planner::getPathCost(alternative, *_pathPlanner->_metric);
+                    _pathPlanner->_cost = (1 - _pathPlanner->_costEpsilon)*Planner::getPathCost(alternative, *_pathPlanner->_metric);
                     emit signalPlan(_pathPlanner->_path.at(_pathIterator + 2), target, this->boxPlanSelect->currentIndex());   // assumption: previous planning is already finished by now
                     // TODO: set max path cost of next iteration somehow
                 }

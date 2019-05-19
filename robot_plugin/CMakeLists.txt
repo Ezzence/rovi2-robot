@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(robot_plugin)
 
-list(APPEND CMAKE_PREFIX_PATH /opt/ros/melodic)
-list(APPEND CMAKE_PREFIX_PATH /home/ada/workspace/ros_ws/devel)
-message(${CMAKE_PREFIX_PATH})
+#list(APPEND CMAKE_PREFIX_PATH /opt/ros/melodic)
+#list(APPEND CMAKE_PREFIX_PATH /home/ada/workspace/ros_ws/devel)
+#message(${CMAKE_PREFIX_PATH})
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  message_generation
   caros_common_msgs
   caros_common_robwork
   caros_control_msgs
@@ -28,10 +27,10 @@ find_package(catkin REQUIRED COMPONENTS
 #)
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#)
 
 ###################################
 ## catkin specific configuration ##

@@ -20,4 +20,20 @@
 </Drawable>
 </Frame>
 
+<Frame name="Obstacle" refframe="Robot">
+	<RPY> 0 0 0 </RPY> <Pos> 0 -0.5 0.9 </Pos>
+	<Drawable name="ObstacleGeo" refframe="Obstacle">
+		<Polytope file="Geometry/box" />
+	</Drawable>
+</Frame>
+
 </WorkCell>
+
+<!-- 
+<Frame name="Obstacle" refframe="Robot">
+	<RPY> 0 0 0 </RPY> <Pos> 0 -0.5 1 </Pos>
+	<Drawable name="ObstacleGeo" refframe="Obstacle">
+		<Polytope file="Geometry/box" />
+	</Drawable>
+</Frame>
+-->

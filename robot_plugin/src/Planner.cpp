@@ -107,7 +107,7 @@ void Planner::callPlan(Q start, Q target, int planSelect)
         break;
     }
     case PlanSelect::ARRTC:
-        success = false;
+        success = doQueryARRTC(start, target, _path);
         break;
     default:
     {
@@ -327,8 +327,8 @@ bool Planner::doQueryARRT(const Q start, const Q goal, trajectory::QPath &result
                 _tmpPath.insert(_tmpPath.end(), reverse.rbegin(), reverse.rend());  // path needs to be reversed
                 emit signalPlanChange();
             }
-            ROS_INFO_STREAM(_bestTree->size() << " " << _cost << " " << costed << " ----------------------------------------------------------------------------------");
-            debugPath(result);
+            ROS_INFO_STREAM("tree: " << _bestTree->size() << " prev cost: " << _cost << " new: " << costed << "-------------");
+            //debugPath(result);
 
             _cost = (1 - _costEpsilon)*costed;
             _distanceHeuristic = std::max(double(0), _distanceHeuristic - _distanceDelta);
@@ -477,6 +477,16 @@ std::vector<RRTNode<Q> *> Planner::kNearestNeighbours(const Q &qTarget, size_t k
     return minNodes;
 }
 
+double Planner::getPathCost(trajectory::QPath &path)
+{
+    double cost = 0;
+    for(size_t i = 0; i < path.size() - 1; ++i)
+    {
+        cost += _metric->distance(path.at(i), path.at(i+1));
+    }
+    return cost;
+}
+
 //const Q Planner::generateExtenstion(RRTTree<Q> &tree, const Q &q)
 //{
 //
@@ -506,7 +516,9 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
 
     _distanceHeuristic = 1.0;
     _costHeuristic = 0;
-    _cost = DBL_MAX;
+    if(!_iterative){
+        _cost = DBL_MAX;
+    }
     _elapsedTimer.start();
 
     while(true)
@@ -522,7 +534,7 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
         _goalTree = new Tree(goal);
         double costed = growTreeARRTC(*_startTree, *_goalTree, start, goal);
 
-        if(costed != 0.)
+        if(costed != 0)
         {
             Path path;
             getPath(*_startTree, *_goalTree, path);
@@ -530,6 +542,7 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
                 ROS_INFO_STREAM("----- NON ITERATIVE ------------");
                 result = Path();
                 result.insert(result.end(), path.begin(), path.end());
+                ROS_INFO_STREAM("size: " << result.size());
             }
             else
             {
@@ -537,9 +550,10 @@ bool Planner::doQueryARRTC(const Q start, const Q goal, trajectory::QPath &resul
                 _tmpPath = Path();
                 _tmpPath.insert(_tmpPath.end(), path.begin(), path.end());
                 emit signalPlanChange();
+                ROS_INFO_STREAM("size: " << _tmpPath.size());
             }
-            ROS_INFO_STREAM("size: " << _startTree->size() + _goalTree->size() << "prev cost: " << _cost << " new: " << costed << "-------------");
-            debugPath(result);
+            ROS_INFO_STREAM("tree: " << _startTree->size() + _goalTree->size() << " prev cost: " << _cost << " new: " << costed << "-------------");
+            //debugPath(result);
 
             _cost = (1 - _costEpsilon)*costed;
             _distanceHeuristic = std::max(double(0), _distanceHeuristic - _distanceDelta);
@@ -583,7 +597,7 @@ double Planner::growTreeARRTC(RRTTree<Q> &startTree, RRTTree<Q> &goalTree, const
             qNew = extendARRT(*tree, goal, qTarget, parent);
             if(qNew != Q()){
                 tree->add(qNew, parent);
-                connected = connect(*tree2, qNew);
+                connected = connect(*tree2, *tree, qNew);
                 //ROS_INFO_STREAM("ARRT: DEBUG");
             }
         }
@@ -600,14 +614,57 @@ double Planner::growTreeARRTC(RRTTree<Q> &startTree, RRTTree<Q> &goalTree, const
 
 }
 
-bool Planner::connect(RRTTree<Q> &tree, Q &target)
+bool Planner::connect(RRTTree<Q> &tree, RRTTree<Q> &otherTree, Q &target)
 {
     Node* qNearNode = nearestNeighbor(tree, target);
     ExtendResult r = ExtendResult::Advanced;
     bool hasAdvanced = false;
     while(r == ExtendResult::Advanced)
     {
-        r = extend(tree, target, qNearNode);
+        r = extendARRTC(tree, otherTree, target, qNearNode);
+        if(r == ExtendResult::Advanced){
+            qNearNode = &tree.getLast();
+        }
+    }
+    if(r == ExtendResult::Reached){
+        return true;
+    }else{
+        return false;
     }
 
+}
+
+Planner::ExtendResult Planner::extendARRTC(RRTTree<Q> &tree, RRTTree<Q> &otherTree, const Q &q, RRTNode<Q> *qNearNode)
+{
+    const Q& qNear = qNearNode->getValue();
+    const Q delta = q - qNear;
+    const double dist = _metric->distance(delta);
+    //ROS_INFO_STREAM("TWO: " << dist);
+
+    if (dist <= _epsilon) {
+        if (!inCollision(qNearNode, q)) {
+            Path path;
+            tree.getRootPath(*qNearNode, path);
+            double cost = getPathCost(path, *_metric) + _metric->distance(qNearNode->getValue(), q) + _metric->distance(q, otherTree.getRoot().getValue());
+            if(cost < _cost){
+                tree.add(q, qNearNode);
+                return Reached;
+            }
+        }
+    }
+    else
+    {
+        const Q qNew = qNear + (_epsilon / dist) * delta;
+        //ROS_INFO_STREAM(qNew.norm2());
+        if (!inCollision(qNearNode, qNew)) {
+            Path path;
+            tree.getRootPath(*qNearNode, path);
+            double cost = getPathCost(path, *_metric) + _metric->distance(qNearNode->getValue(), qNew) + _metric->distance(qNew, otherTree.getRoot().getValue());
+            if(cost < _cost){
+                tree.add(qNew, qNearNode);
+                return Advanced;
+            }
+        }
+    }
+    return Trapped;
 }

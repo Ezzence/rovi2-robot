@@ -56,8 +56,8 @@ public:
 
     trajectory::QPath _path;
     trajectory::QPath _tmpPath;
-    RRTTree<Q>* _startTree;
-    RRTTree<Q>* _goalTree;
+    RRTTree<Q>* _startTree = nullptr;
+    RRTTree<Q>* _goalTree = nullptr;
     RRTTree<Q>* _bestTree = nullptr;
 
 
@@ -70,6 +70,7 @@ public:
     // ARRT
     int MAX_TIME = 0;
     double _cost = DBL_MAX;
+    double _costEpsilon = 0.01;
 
 
 public slots:
@@ -116,10 +117,10 @@ private:
     // ARRTC
     bool doQueryARRTC(const Q start, const Q goal, trajectory::QPath& result);
     double growTreeARRTC(RRTTree<Q>& startTree, RRTTree<Q>& goalTree, const Q& start, const Q& goal);
-    bool connect(RRTTree<Q>& tree, Q& target);
+    bool connect(RRTTree<Q>& tree, RRTTree<Q>& otherTree, Q& target);
+    ExtendResult extendARRTC(RRTTree<Q>& tree, RRTTree<Q>& otherTree, const Q& q, RRTNode<Q>* qNearNode);
 
     QElapsedTimer _elapsedTimer;
-    double _costEpsilon = 0.01;
     double _distanceHeuristic = 0.5;
     double _distanceDelta = 0;
     double _costHeuristic = 0.5;
